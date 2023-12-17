@@ -11,6 +11,12 @@ namespace DiscordBot
 			{
 				Console.WriteLine("Not Supported");
 			}
+
+			HttpListener listener = new();
+			listener.Prefixes.Add("https://discord.akagigahara.site/api/");
+			listener.Start();
+			HttpListenerContext context = listener.GetContext();
+			Console.WriteLine(context.Request.ToString);
 		}
 	}
 }
