@@ -14,9 +14,19 @@ namespace DiscordBot
 
 			HttpListener listener = new();
 			listener.Prefixes.Add("http://discord.akagigahara.site:80/api/");
-			listener.Start();
-			HttpListenerContext context = listener.GetContext();
-			Console.WriteLine(context.Request.ToString);
+			while (listener.IsListening)
+			{
+				try
+				{ 
+					listener.Start();
+				}
+				catch(Exception ex)
+				{
+					Console.WriteLine(ex.ToString());
+					HttpListenerContext context = listener.GetContext();
+					Console.WriteLine(context.Request.ToString);
+				}
+			}
 		}
 	}
 }
