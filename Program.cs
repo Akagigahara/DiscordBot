@@ -13,10 +13,11 @@ namespace DiscordBot
 			}
 
 			HttpListener listener = new();
-			listener.Prefixes.Add("http://discord.akagigahara.site:80/api/");
+			listener.Prefixes.Add("http://localhost/");
 			try
 			{ 
 				listener.Start();
+				Console.WriteLine("Started");
 				while(listener.IsListening)
 				{
 					HttpListenerContext context = listener.GetContext();
