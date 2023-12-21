@@ -19,7 +19,7 @@ namespace DiscordBot
 				{
 					HttpListenerContext context = listener.GetContext();
 
-					Console.WriteLine(context.Request);
+					Console.WriteLine(context.Request.ToString());
 				}
 			}
 			catch (Exception ex)
