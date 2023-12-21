@@ -10,7 +10,7 @@ namespace DiscordBot
 
 			Console.WriteLine("Hello, World!");
 			HttpListener listener = new();
-			listener.Prefixes.Add("http://*:15411/");
+			listener.Prefixes.Add("https://*:15411/");
 			try
 			{
 				listener.Start();
