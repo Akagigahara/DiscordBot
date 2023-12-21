@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Microsoft.Data.Sqlite;
 
 namespace DiscordBot
 {
@@ -6,29 +7,29 @@ namespace DiscordBot
 	{
 		static void Main(string[] args)
 		{
-			Console.WriteLine("Hello, World!");
-			if(!HttpListener.IsSupported)
-			{
-				Console.WriteLine("Not Supported");
-			}
 
+			Console.WriteLine("Hello, World!");
 			HttpListener listener = new();
-			listener.Prefixes.Add("http://localhost/");
+			listener.Prefixes.Add("http://*:15411/");
 			try
-			{ 
+			{
 				listener.Start();
-				Console.WriteLine("Started");
+				Console.WriteLine("Listening Started");
 				while(listener.IsListening)
 				{
 					HttpListenerContext context = listener.GetContext();
-					Console.WriteLine(context.Request.ToString());
+
+					Console.WriteLine(context.ToString());
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
+
 				Console.WriteLine(ex.ToString());
-				
 			}
+
+			DatabaseHandler databaseHandler = new();
+			databaseHandler.Close();
 		}
 	}
 }
