@@ -56,6 +56,7 @@ namespace DiscordBot
 					Request.Response.StatusCode = 200;
 					Request.Response.ContentType = "application/json";
 					JsonSerializer.Serialize(Request.Response.OutputStream, new InteractionResponse { type = InteractionResponse.InteractionCallbackType.PONG});
+					Request.Response.Close();
 					break;
 				case InteractionBase.InteractionType.APPLICATION_COMMAND:
 					break;
