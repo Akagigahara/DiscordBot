@@ -11,7 +11,7 @@ namespace DiscordBot
 	{
 		readonly HttpClient client;
 
-		RequestHandler()
+		public RequestHandler()
 		{
 			client = new();
 		}
@@ -56,7 +56,6 @@ namespace DiscordBot
 					Request.Response.StatusCode = 200;
 					Request.Response.ContentType = "application/json";
 					JsonSerializer.Serialize(Request.Response.OutputStream, new InteractionResponse { type = InteractionResponse.InteractionCallbackType.PONG});
-					Request.Response.Close();
 					break;
 				case InteractionBase.InteractionType.APPLICATION_COMMAND:
 					break;
@@ -67,6 +66,8 @@ namespace DiscordBot
 				case InteractionBase.InteractionType.MODAL_SUBMIT:
 					break;
 			}
+			Console.WriteLine("Sending Message");
+			Request.Response.Close();
 		}
 	}
 }
