@@ -1,0 +1,19 @@
+{
+    "application_id": "921363582191566878",
+    "entitlements": [],
+    "id": "1193360081622941837",
+    "token": "aW50ZXJhY3Rpb246MTE5MzM2MDA4MTYyMjk0MTgzNzo3UjNGNHNSVkZlWHJJU1VYc3dWZlhOcldubVNLODJsWHlZNkU4bGxWSzNOQzRGSUhadUFGRklpZm1Dbkg0bnpPdlVwQkN2a3Naenl1Z2Y5RURYandpNGpiTndlMmtzeUhYSlVIOVR5MFM5eG94dzk4b09JenVuaVBjRnI2bjRiSA",
+    "type": 1,
+    "user": {
+        "avatar": "c6a249645d46209f337279cd2ca998c7",
+        "avatar_decoration_data": null,
+        "bot": true,
+        "discriminator": "0000",
+        "global_name": "Discord",
+        "id": "643945264868098049",
+        "public_flags": 1,
+        "system": true,
+        "username": "discord"
+    },
+    "version": 1
+}

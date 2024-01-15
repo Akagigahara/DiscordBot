@@ -1,7 +1,9 @@
 ﻿namespace DiscordBot.Resources
 {
-	internal class User
+	public class User
 	{
-		ulong Id;
+		public required string  id { get; set; }
+		public required string username { get; set; }
+		public required string discriminator { get; set; }
 	}
 }

@@ -1,6 +1,6 @@
 ﻿namespace DiscordBot.Resources
 {
-	internal class Message
+	public class Message
 	{
 		ulong Id;
 	}
