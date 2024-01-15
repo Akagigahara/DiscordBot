@@ -10,10 +10,14 @@ namespace DiscordBot
 		{
 			Console.WriteLine("Hello, World!");
 			Task.Run(() => RequestHandler.Listen());
-			
 
 			DatabaseHandler databaseHandler = new();
 			databaseHandler.Close();
+
+			while(true)
+			{
+				Console.ReadLine();
+			}
 		}
 	}
 }
