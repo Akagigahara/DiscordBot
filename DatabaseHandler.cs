@@ -12,7 +12,7 @@ namespace DiscordBot
 		SqliteConnection connection;
 		public DatabaseHandler() 
 		{
-			connection = new SqliteConnection("Data Source=discord.db");
+			connection = new SqliteConnection("Data Source=/DiscordBot/active/discord.db");
 			connection.Open();
 		}
 
