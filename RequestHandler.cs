@@ -16,7 +16,7 @@ namespace DiscordBot
 			client = new();
 		}
 
-		public static Task Listen()
+		public static void Listen()
 		{
 			HttpListener listener = new();
 			listener.Prefixes.Add("http://*:15412/");
@@ -38,8 +38,6 @@ namespace DiscordBot
 
 				Console.WriteLine(ex.ToString());
 			}
-
-			return Task.CompletedTask;
 		}
 
 		public string SendRequest(HttpRequestMessage Request)

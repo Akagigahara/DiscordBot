@@ -9,7 +9,7 @@ namespace DiscordBot
 		static void Main(string[] args)
 		{
 			Console.WriteLine("Hello, World!");
-			RequestHandler.Listen().Start();
+			Task.Run(() => RequestHandler.Listen());
 			
 
 			DatabaseHandler databaseHandler = new();
