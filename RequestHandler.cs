@@ -49,7 +49,8 @@ namespace DiscordBot
 
 		public static void ResolveRequest(HttpListenerContext Request)
 		{
-			InteractionBase ResolvedRequest = JsonSerializer.Deserialize<InteractionBase>(new StreamReader(Request.Request.InputStream).ReadToEnd())!;
+			string ParsedRequest = new StreamReader(Request.Request.InputStream.).ReadToEnd();
+			InteractionBase ResolvedRequest = JsonSerializer.Deserialize<InteractionBase>()!;
 			switch(ResolvedRequest.type)
 			{
 				case InteractionBase.InteractionType.PING:
