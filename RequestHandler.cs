@@ -49,7 +49,7 @@ namespace DiscordBot
 
 		public static void ResolveRequest(HttpListenerContext Request)
 		{
-			string ParsedRequest = new StreamReader(Request.Request.InputStream).ReadToEnd();
+			string ParsedRequest = new StreamReader(Request.Request.InputStream, Request.Request.ContentEncoding).ReadToEnd();
 			InteractionBase ResolvedRequest = JsonSerializer.Deserialize<InteractionBase>(ParsedRequest)!;
 			switch(ResolvedRequest.type)
 			{
