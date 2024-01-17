@@ -69,6 +69,6 @@ namespace DiscordBot
 			}
 			Console.WriteLine("Sending Message");
 			Request.Response.Close();
-		}
+			}
 	}
 }
