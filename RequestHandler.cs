@@ -27,7 +27,7 @@ namespace DiscordBot
 				while (listener.IsListening)
 				{
 					HttpListenerContext context = listener.GetContext();
-					Task.Run(() => RequestHandler.ResolveRequest(context, JsonSerializer.Deserialize<InteractionBase>(new StreamReader(context.Request.InputStream).ReadToEnd())!));
+					Task.Run(() => RequestHandler.ResolveRequest(context));
 				}
 			}
 			catch (Exception ex)
@@ -44,11 +44,10 @@ namespace DiscordBot
 			return content.ReadFromJsonAsync<string>(JsonSerializerOptions.Default).Result!;
 		}
 
-		public static void ResolveRequest(HttpListenerContext Request, InteractionBase Interaction)
+		public static void ResolveRequest(HttpListenerContext Request)
 		{
-			//string ParsedRequest = new StreamReader(Request.Request.InputStream, Request.Request.ContentEncoding).ReadToEnd();
-			//InteractionBase ResolvedRequest = JsonSerializer.Deserialize<InteractionBase>(ParsedRequest)!;
-			Console.WriteLine(new StreamReader(Request.Request.InputStream).ReadToEnd());
+			string ParsedRequest = new StreamReader(Request.Request.InputStream, Request.Request.ContentEncoding).ReadToEnd();
+			InteractionBase Interaction = JsonSerializer.Deserialize<InteractionBase>(ParsedRequest)!;
 			switch (Interaction.type)
 			{
 				case InteractionBase.InteractionType.PING:
