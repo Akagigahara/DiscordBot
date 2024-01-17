@@ -27,7 +27,7 @@ namespace DiscordBot
 				while (listener.IsListening)
 				{
 					HttpListenerContext context = listener.GetContext();
-					Task.Run(() => RequestHandler.ResolveRequest(context, JsonSerializer.Deserialize<InteractionBase>(context.Request.InputStream)!);
+					Task.Run(() => RequestHandler.ResolveRequest(context, JsonSerializer.Deserialize<InteractionBase>(context.Request.InputStream)!));
 
 
 					Console.WriteLine(new StreamReader(context.Request.InputStream).ReadToEnd());
