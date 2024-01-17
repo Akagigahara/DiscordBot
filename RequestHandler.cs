@@ -27,7 +27,7 @@ namespace DiscordBot
 				while (listener.IsListening)
 				{
 					HttpListenerContext context = listener.GetContext();
-					Task.Run(() => RequestHandler.ResolveRequest(context));
+					Task.Run(() => RequestHandler.ResolveRequest(context, JsonSerializer.Deserialize<InteractionBase>(context.Request.InputStream)!);
 
 
 					Console.WriteLine(new StreamReader(context.Request.InputStream).ReadToEnd());
@@ -47,11 +47,11 @@ namespace DiscordBot
 			return content.ReadFromJsonAsync<string>(JsonSerializerOptions.Default).Result!;
 		}
 
-		public static void ResolveRequest(HttpListenerContext Request)
+		public static void ResolveRequest(HttpListenerContext Request, InteractionBase Interaction)
 		{
-			string ParsedRequest = new StreamReader(Request.Request.InputStream, Request.Request.ContentEncoding).ReadToEnd();
-			InteractionBase ResolvedRequest = JsonSerializer.Deserialize<InteractionBase>(ParsedRequest)!;
-			switch(ResolvedRequest.type)
+			//string ParsedRequest = new StreamReader(Request.Request.InputStream, Request.Request.ContentEncoding).ReadToEnd();
+			//InteractionBase ResolvedRequest = JsonSerializer.Deserialize<InteractionBase>(ParsedRequest)!;
+			switch(Interaction.type)
 			{
 				case InteractionBase.InteractionType.PING:
 					Request.Response.StatusCode = 200;
