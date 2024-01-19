@@ -54,7 +54,7 @@ namespace DiscordBot
 			var PublicKeyByte = Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["PublicKey"]!);
 			Ed25519 Verifier = new();
 
-			PublicKey publicKey = PublicKey.Import(SignatureAlgorithm.Ed25519, PublicKeyByte, KeyBlobFormat.RawPublicKey);
+			PublicKey publicKey = PublicKey.Import(SignatureAlgorithm.Ed25519, PublicKeyByte, KeyBlobFormat.PkixPublicKey);
 
 			if (Verifier.Verify(
 				publicKey,
