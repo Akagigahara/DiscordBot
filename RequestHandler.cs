@@ -1,6 +1,12 @@
 ﻿using DiscordBot.Resources;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Crypto.Signers;
+using Org.BouncyCastle.Utilities.Encoders;
+using System.Collections.Specialized;
+using System.Configuration;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 
 namespace DiscordBot
@@ -44,7 +50,25 @@ namespace DiscordBot
 
 		public static void ResolveRequest(HttpListenerContext Request)
 		{
+			NameValueCollection Headers = Request.Request.Headers;
 			string ParsedRequest = new StreamReader(Request.Request.InputStream, Request.Request.ContentEncoding).ReadToEnd();
+
+			Ed25519PublicKeyParameters PublicKey = new(Hex.DecodeStrict(ConfigurationManager.AppSettings["PublicKey"]));
+			var DataToVerify = Encoding.UTF8.GetBytes(ParsedRequest);
+			var Signature = Convert.FromHexString(Headers["X-Signature-Ed25519"]!);
+
+			Ed25519Signer Verifier = new();
+			Verifier.Init(false, PublicKey);
+			Verifier.BlockUpdate(DataToVerify, 0, DataToVerify.Length);
+			if (!Verifier.VerifySignature(Signature))
+			{
+				Request.Response.StatusCode = 401;
+				using (StreamWriter Write = new(Request.Response.OutputStream))
+				{
+					Write.Write("invalid request signature");
+				}
+			}
+
 			InteractionBase Interaction = JsonSerializer.Deserialize<InteractionBase>(ParsedRequest)!;
 			Console.WriteLine(ParsedRequest);
 			switch (Interaction.type)
