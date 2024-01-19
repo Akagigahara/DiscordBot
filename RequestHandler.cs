@@ -56,14 +56,14 @@ namespace DiscordBot
 
 
 			Ed25519PublicKeyParameters PublicKeyParameter = new(Hex.DecodeStrict(ConfigurationManager.AppSettings["PublicKey"]!));
-			Byte[] DataToVerify = Encoding.UTF8.GetBytes(ParsedRequest);
+			Byte[] DataToVerify = Encoding.UTF8.GetBytes(Headers["X-Timestamp"]! + ParsedRequest);
 			Byte[] SignatureBytes = Convert.FromHexString(Headers["X-Signature-Ed25519"]!);
 
 			Ed25519Signer Verifier = new();
 			Verifier.Init(false, PublicKeyParameter);
 			Verifier.BlockUpdate(DataToVerify, 0, DataToVerify.Length);
 			bool IsVerified = Verifier.VerifySignature(SignatureBytes);
-			if (IsVerified)
+			if (!IsVerified)
 			{
 				Request.Response.StatusCode = 401;
 				using (StreamWriter Write = new(Request.Response.OutputStream))
