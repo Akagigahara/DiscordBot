@@ -1,9 +1,7 @@
 ﻿using DiscordBot.Resources;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
-using System.Text.Unicode;
 
 namespace DiscordBot
 {
@@ -48,6 +46,7 @@ namespace DiscordBot
 		{
 			string ParsedRequest = new StreamReader(Request.Request.InputStream, Request.Request.ContentEncoding).ReadToEnd();
 			InteractionBase Interaction = JsonSerializer.Deserialize<InteractionBase>(ParsedRequest)!;
+			Console.WriteLine(ParsedRequest);
 			switch (Interaction.type)
 			{
 				case InteractionBase.InteractionType.PING:
