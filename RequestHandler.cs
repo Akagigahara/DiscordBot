@@ -1,7 +1,5 @@
 ﻿using DiscordBot.Resources;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto.Signers;
-using Org.BouncyCastle.Utilities.Encoders;
+using NSec.Cryptography;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.Net;
@@ -53,14 +51,13 @@ namespace DiscordBot
 			NameValueCollection Headers = Request.Request.Headers;
 			string ParsedRequest = new StreamReader(Request.Request.InputStream, Request.Request.ContentEncoding).ReadToEnd();
 
-			Ed25519PublicKeyParameters PublicKey = new(Hex.DecodeStrict(ConfigurationManager.AppSettings["PublicKey"]));
-			var DataToVerify = Encoding.UTF8.GetBytes(ParsedRequest);
-			var Signature = Convert.FromHexString(Headers["X-Signature-Ed25519"]!);
+			var PublicKeyByte = Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["PublicKey"]!);
+			Ed25519 Verifier = new();
 
-			Ed25519Signer Verifier = new();
-			Verifier.Init(false, PublicKey);
-			Verifier.BlockUpdate(DataToVerify, 0, DataToVerify.Length);
-			if (!Verifier.VerifySignature(Signature))
+			if (Verifier.Verify(
+				PublicKey.Import(SignatureAlgorithm.Ed25519, Encoding.UTF8.GetBytes(ParsedRequest), KeyBlobFormat.RawPublicKey),
+				Encoding.UTF8.GetBytes(ParsedRequest),
+				Encoding.UTF8.GetBytes(Headers["X-Signature-Ed25519"]!)))
 			{
 				Request.Response.StatusCode = 401;
 				using (StreamWriter Write = new(Request.Response.OutputStream))
