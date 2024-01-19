@@ -66,7 +66,10 @@ namespace DiscordBot
 				using (StreamWriter Write = new(Request.Response.OutputStream))
 				{
 					Write.Write("invalid request signature");
+					
 				}
+				Request.Response.Close();
+				return;
 			}
 
 			InteractionBase Interaction = JsonSerializer.Deserialize<InteractionBase>(ParsedRequest)!;
