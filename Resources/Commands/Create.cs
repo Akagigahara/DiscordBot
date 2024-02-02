@@ -62,7 +62,7 @@ namespace DiscordBot.Resources.Commands
 							custom_id = $"role_select_{ChannelID}"
 						}
 					}
-				}), Encoding.UTF8),
+				}), Encoding.UTF8, MediaTypeNames.Application.Json),
 			});
 		}
 	}
