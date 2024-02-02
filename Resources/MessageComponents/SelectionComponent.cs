@@ -9,6 +9,7 @@ namespace DiscordBot.Resources.MessageComponents
 		override public required string custom_id { get; init; }
 		public SelectionOption[]? options { get; init; }
 		public Channel.ChannelType[]? channels_types { get; init; }
+		[JsonInclude]
 		public string? placeholder { get; init; }
 		public DefaultValue[]? default_values { get; init; }
 		public int min_values { get; init; }
