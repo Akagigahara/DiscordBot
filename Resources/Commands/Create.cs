@@ -48,7 +48,7 @@ namespace DiscordBot.Resources.Commands
 
 		public static void HandleCommand(InteractionBase.InteractionData data)
 		{
-			string ChannelID = (from option in data.options where option.name == "channel" select option).First().value!;
+			string ChannelID = (from option in (from option in data.options where option.name == "role_select" select option) where option.name == "channel" select option).First().value!;
 			RequestHandler.SendRequest(new(HttpMethod.Post, $"/channels/{ChannelID}/messages")
 			{
 				Content = new StringContent(JsonSerializer.Serialize(new MessageSent()
