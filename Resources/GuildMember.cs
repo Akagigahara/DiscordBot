@@ -17,7 +17,7 @@ namespace DiscordBot.Resources
 		public required bool deaf { get; set; }
 		public required bool mute { get; set; }
 		public required int flags { get; set; }
-		public int? pending { get; set; }
+		public bool pending { get; set; }
 		public string? permissions { get; set; }
 		public DateTime? communication_disabled_until { get; set; }
 	}
