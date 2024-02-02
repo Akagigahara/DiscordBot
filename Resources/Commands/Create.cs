@@ -43,7 +43,13 @@ namespace DiscordBot.Resources.Commands
 		public static void HandleCommand(InteractionBase.InteractionData data)
 		{
 			string ChannelID = (from option in (from option in data.options where option.name == "role_select" select option).First()!.options where option.name == "channel" select option).First().value!;
-			RequestHandler.SendRequest(new(HttpMethod.Post, $"channels/{ChannelID}/messages")
+			List<Role> Roles = JsonSerializer.Deserialize<List<Role>>(RequestHandler.SendRequest(new()
+			{
+				RequestUri = new($"guilds/{data.guild_id}/roles"),
+				Method = HttpMethod.Post,
+			}))!;
+
+			/*RequestHandler.SendRequest(new(HttpMethod.Post, $"channels/{ChannelID}/messages")
 			{
 				Content = new StringContent(JsonSerializer.Serialize(new MessageSent()
 				{
@@ -55,7 +61,7 @@ namespace DiscordBot.Resources.Commands
 							type = ComponentBase.ComponentType.Action_Row,
 							components = [new SelectionComponent()
 							{
-									type = ComponentBase.ComponentType.Role_Select,
+									type = ComponentBase.ComponentType.String_Select,
 									custom_id = $"role_select_{ChannelID}",
 									min_values = 1,
 									max_values = 25,
@@ -63,7 +69,7 @@ namespace DiscordBot.Resources.Commands
 						}
 					]
 				}), Encoding.UTF8, MediaTypeNames.Application.Json),
-			});
+			});*/
 		}
 	}
 }
