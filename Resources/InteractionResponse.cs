@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DiscordBot.Resources
@@ -19,6 +20,9 @@ namespace DiscordBot.Resources
 			MODAL,
 			PREMIUM_REQUIRED
 		}
+		[JsonDerivedType(typeof(CallbackMessage))]
+		[JsonDerivedType(typeof(CallbackModal))]
+		[JsonDerivedType(typeof(CallbackAutocomplete))]
 		public abstract class InteractionCallbackBase;
 
 		public class CallbackMessage : InteractionCallbackBase
