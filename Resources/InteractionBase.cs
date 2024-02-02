@@ -7,6 +7,8 @@
 		public required InteractionType type { get; set; }
 		public InteractionData? data { get; set; }
 		public string? guild_id { get; set; }
+		public Channel? channel { get; set; }
+		public string? channel_id { get; set; }
 		public GuildMember? member { get; set; }
 		public User? user { get; set; }
 		public required string token { get; set; }
@@ -14,6 +16,7 @@
 		public MessageReceived? message { get; set; }
 		public string? app_permissions { get; set; }
 		public string? locale { get; set; }
+		public string? guild_locale { get; set; }
 		public required Entitlement[] entitlements { get; set; }
 
 
