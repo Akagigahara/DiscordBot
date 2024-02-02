@@ -58,7 +58,9 @@ namespace DiscordBot.Resources.Commands
 								new()
 								{
 									type = ComponentBase.ComponentType.Role_Select,
-									custom_id = $"role_select_{ChannelID}"
+									custom_id = $"role_select_{ChannelID}",
+									min_values = 1,
+									max_values = 25,
 								}
 							}
 						}
