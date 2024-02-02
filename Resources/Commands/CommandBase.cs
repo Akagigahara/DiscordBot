@@ -8,7 +8,7 @@ namespace DiscordBot.Resources.Commands
 		/// <summary>
 		/// Unique ID of Command
 		/// </summary>
-		public string id { get; init; }
+		public required string id { get; init; }
 		/// <summary>
 		/// Type of the command, defaults to <see cref="CommandType.CHAT_INPUT"/>
 		/// </summary>
@@ -25,7 +25,7 @@ namespace DiscordBot.Resources.Commands
 		/// <summary>
 		/// Name of the command
 		/// </summary>
-		public string name { get; init; }
+		public required string name { get; init; }
 		/// <summary>
 		/// Localization dictionary of the command’s name
 		/// </summary>

@@ -33,7 +33,7 @@ namespace DiscordBot.Resources.Commands
 							 new CommandOption()
 							{
 								name = "number_of_menus",
-								description = "The amount of menu’s you want for your role selection",
+								description = "The amount of menu’s you need for your role selection. 1 Menu fits 25 Roles.",
 								type = CommandOption.OptionType.INTEGER,
 								min_value = 1,
 								max_value = 5
@@ -51,39 +51,35 @@ namespace DiscordBot.Resources.Commands
 			string roleRequest = RequestHandler.SendRequest(new(HttpMethod.Get, $"guilds/{Interaction.guild_id}/roles"));
 			Role[] Roles = JsonSerializer.Deserialize<Role[]>(roleRequest)!.TakeWhile(x => x.permissions == "0").ToArray();
 
+			ComponentBase[] components = new ComponentBase[NumberOfMenus];
+
+			foreach (int menu in Enumerable.Range(0, NumberOfMenus))
+			{
+				components[menu] = new ActionRow()
+				{
+					type = ComponentBase.ComponentType.Action_Row,
+					components = [new SelectionComponent()
+					{
+						type = ComponentBase.ComponentType.String_Select,
+						custom_id = $"role_select_G{Interaction.guild_id}_Ch{ChannelID}_Me{menu}",
+						placeholder = menu > 0 ? "Choose your Role" : $"Roles missing from {menu + 1}",
+						min_values = 0,
+						max_values = 25
+					}]
+				};
+			}
+
+			MessageSent messagetoBeSent = new()
+			{
+				content = "Please choose a role",
+				components = components
+			};
+
+			
+
 			RequestHandler.SendRequest(new(HttpMethod.Post, $"channels/{ChannelID}/messages")
 			{
-				Content = new StringContent(JsonSerializer.Serialize(new MessageSent()
-				{
-					content = "Please choose a role",
-					components =
-					[
-						new ActionRow() 
-						{
-							type = ComponentBase.ComponentType.Action_Row,
-							components = [new SelectionComponent()
-							{
-									type = ComponentBase.ComponentType.Role_Select,
-									custom_id = $"role_select_{ChannelID}",
-									min_values = 1,
-									max_values = 25,
-									placeholder = "Select your first Roles"
-							}]
-						},
-						new ActionRow()
-						{
-							type = ComponentBase.ComponentType.Action_Row,
-							components=[new SelectionComponent()
-							{
-								type = ComponentBase.ComponentType.Role_Select,
-								custom_id = $"role_select_{ChannelID}_2",
-								min_values = 1,
-								max_values = 10,
-								placeholder = "How about some more?"
-							}]
-						}
-					]
-				}), Encoding.UTF8, MediaTypeNames.Application.Json),
+				Content = new StringContent(JsonSerializer.Serialize(messagetoBeSent), Encoding.UTF8, MediaTypeNames.Application.Json),
 			});
 		}
 	}
