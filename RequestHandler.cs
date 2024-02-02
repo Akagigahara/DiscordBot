@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using static DiscordBot.Resources.InteractionResponse;
 
 namespace DiscordBot
 {
@@ -87,6 +88,10 @@ namespace DiscordBot
 					ResponseToSend = new()
 					{
 						type = InteractionResponse.InteractionCallbackType.CHANNEL_MESSAGE_WITH_SOURCE,
+						data = new CallbackMessage()
+						{
+							content = "Proccessing request"
+						}
 					};
 					Task.Run(() => Commands[data.name].Invoke(data));
 					break;
