@@ -1,14 +1,7 @@
 ﻿using DiscordBot.Resources.MessageComponents;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
 using System.Net.Mime;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using static DiscordBot.Resources.InteractionBase;
 
 namespace DiscordBot.Resources.Commands
 {
@@ -54,14 +47,22 @@ namespace DiscordBot.Resources.Commands
 			{
 				Content = new StringContent(JsonSerializer.Serialize(new MessageSent()
 				{
-					components = new SelectionComponent[]
-					{
-						new()
+					components =
+					[
+						new ActionRow() 
 						{
-							type = ComponentBase.ComponentType.Role_Select,
-							custom_id = $"role_select_{ChannelID}"
+							type = ComponentBase.ComponentType.Action_Row,
+							custom_id = $"role_select_action_row_{ChannelID}",
+							component = new SelectionComponent[]
+							{
+								new()
+								{
+									type = ComponentBase.ComponentType.Role_Select,
+									custom_id = $"role_select_{ChannelID}"
+								}
+							}
 						}
-					}
+					]
 				}), Encoding.UTF8, MediaTypeNames.Application.Json),
 			});
 		}
