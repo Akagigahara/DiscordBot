@@ -46,7 +46,7 @@ namespace DiscordBot.Resources.Commands
 			string roleRequest = RequestHandler.SendRequest(new(HttpMethod.Get, $"guilds/{Interaction.guild_id}/roles"));
 			Role[] Roles = JsonSerializer.Deserialize<Role[]>(roleRequest)!;
 
-			/*RequestHandler.SendRequest(new(HttpMethod.Post, $"channels/{ChannelID}/messages")
+			RequestHandler.SendRequest(new(HttpMethod.Post, $"channels/{ChannelID}/messages")
 			{
 				Content = new StringContent(JsonSerializer.Serialize(new MessageSent()
 				{
@@ -58,15 +58,28 @@ namespace DiscordBot.Resources.Commands
 							type = ComponentBase.ComponentType.Action_Row,
 							components = [new SelectionComponent()
 							{
-									type = ComponentBase.ComponentType.String_Select,
+									type = ComponentBase.ComponentType.Role_Select,
 									custom_id = $"role_select_{ChannelID}",
 									min_values = 1,
 									max_values = 25,
+									placeholder = "Select your first Roles"
+							}]
+						},
+						new ActionRow()
+						{
+							type = ComponentBase.ComponentType.Action_Row,
+							components=[new SelectionComponent()
+							{
+								type = ComponentBase.ComponentType.Role_Select,
+								custom_id = $"role_select_{ChannelID}_2",
+								min_values = 1,
+								max_values = 10,
+								placeholder = "How about some more?"
 							}]
 						}
 					]
 				}), Encoding.UTF8, MediaTypeNames.Application.Json),
-			});*/
+			});
 		}
 	}
 }
