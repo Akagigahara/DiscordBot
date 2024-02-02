@@ -15,7 +15,7 @@ namespace DiscordBot
 {
 	public class RequestHandler
 	{
-		static readonly Dictionary<string, Action<InteractionBase.InteractionData>> Commands = new() { {"create", Create.HandleCommand }, };
+		static readonly Dictionary<string, Action<InteractionBase>> Commands = new() { {"create", Create.HandleCommand }, };
 
 		public static void Listen()
 		{
@@ -95,7 +95,7 @@ namespace DiscordBot
 							content = "Proccessing request"
 						}
 					};
-					Task.Run(() => Commands[data.name].Invoke(data));
+					Task.Run(() => Commands[data.name].Invoke(Interaction));
 					break;
 				case InteractionBase.InteractionType.MESSAGE_COMPONENT:
 					break;

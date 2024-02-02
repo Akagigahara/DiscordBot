@@ -2,22 +2,22 @@
 {
 	public class InteractionBase
 	{
-		public required string id { get; set; }
-		public required string application_id { get; set; }
-		public required InteractionType type { get; set; }
-		public InteractionData? data { get; set; }
-		public string? guild_id { get; set; }
-		public Channel? channel { get; set; }
-		public string? channel_id { get; set; }
-		public GuildMember? member { get; set; }
-		public User? user { get; set; }
-		public required string token { get; set; }
-		public required int version { get; set; }
-		public MessageReceived? message { get; set; }
-		public string? app_permissions { get; set; }
-		public string? locale { get; set; }
-		public string? guild_locale { get; set; }
-		public required Entitlement[] entitlements { get; set; }
+		public required string id { get; init; }
+		public required string application_id { get; init; }
+		public required InteractionType type { get; init; }
+		public InteractionData? data { get; init; }
+		public string? guild_id { get; init; }
+		public Channel? channel { get; init; }
+		public string? channel_id { get; init; }
+		public GuildMember? member { get; init; }
+		public User? user { get; init; }
+		public required string token { get; init; }
+		public required int version { get; init; }
+		public MessageReceived? message { get; init; }
+		public string? app_permissions { get; init; }
+		public string? locale { get; init; }
+		public string? guild_locale { get; init; }
+		public required Entitlement[] entitlements { get; init; }
 
 
 		public enum InteractionType
@@ -31,77 +31,77 @@
 
 		public class InteractionData
 		{
-			public required string id { get; set; }
-			public required string name { get; set; }
-			public required int type { get; set; }
-			public ResolvedData? resolved { get; set; }
-			public CommandOptionData[]? options { get; set; }
-			public string? guild_id { get; set; }
-			public string? target_id { get; set; }
+			public required string id { get; init; }
+			public required string name { get; init; }
+			public required int type { get; init; }
+			public ResolvedData? resolved { get; init; }
+			public CommandOptionData[]? options { get; init; }
+			public string? guild_id { get; init; }
+			public string? target_id { get; init; }
 		}
 
 		public class MessageComponent
 		{
-			public required string custom_id { get; set; }
-			public required int component_type { get; set; }
-			public OptionValue[]? values { get; set; }
-			public ResolvedData? resolved { get; set; }
+			public required string custom_id { get; init; }
+			public required int component_type { get; init; }
+			public OptionValue[]? values { get; init; }
+			public ResolvedData? resolved { get; init; }
 		}
 
 		public class ModalSubmit
 		{
-			public required string custom_id { get; set; }
-			public required MessageComponent[] components { get; set; }
+			public required string custom_id { get; init; }
+			public required MessageComponent[] components { get; init; }
 		}
 
 		public class ResolvedData
 		{
-			public Dictionary<string, User>? users { get; set; }
-			public Dictionary<string, GuildMember>? members { get; set; }
-			public Dictionary<string, Role>? roles { get; set; }
-			public Dictionary<string, Channel>? channels { get; set; }
-			public Dictionary<string, MessageReceived>? messages { get; set; }
-			public Dictionary<string, Attachment>? attachments { get; set; }
+			public Dictionary<string, User>? users { get; init; }
+			public Dictionary<string, GuildMember>? members { get; init; }
+			public Dictionary<string, Role>? roles { get; init; }
+			public Dictionary<string, Channel>? channels { get; init; }
+			public Dictionary<string, MessageReceived>? messages { get; init; }
+			public Dictionary<string, Attachment>? attachments { get; init; }
 		}
 
 		public class CommandOptionData
 		{
-			public required string name { get; set; }
-			public required int type { get; set; }
-			public string? value { get; set; }
-			public CommandOptionData[]? options { get; set; }
-			public bool? focused { get; set; }
+			public required string name { get; init; }
+			public required int type { get; init; }
+			public string? value { get; init; }
+			public CommandOptionData[]? options { get; init; }
+			public bool? focused { get; init; }
 		}
 
 		public class MessageInteraction
 		{
-			public required string id { get; set; }
-			public InteractionType type { get; set; }
-			public required string name { get; set; }
-			public User? user { get; set; }
-			public GuildMember? member { get; set; }
+			public required string id { get; init; }
+			public InteractionType type { get; init; }
+			public required string name { get; init; }
+			public User? user { get; init; }
+			public GuildMember? member { get; init; }
 
 		}
 
 		public class OptionValue
 		{
-			public required string label { get; set; }
-			public required string value { get; set; }
-			public string? description { get; set; }
-			public Emoji? emoji { get; set; }
-			public bool @default { get; set; }
+			public required string label { get; init; }
+			public required string value { get; init; }
+			public string? description { get; init; }
+			public Emoji? emoji { get; init; }
+			public bool @default { get; init; }
 		}
 
 		public class Emoji
 		{
-			public string? id { get; set; }
-			public string? name { get; set; }
-			public Role[]? roles { get; set; }
-			public User? user { get; set; }
-			public bool? require_colons { get; set; }
-			public bool? managed { get; set; }
-			public bool? animated { get; set; }
-			public bool? available { get; set; }
+			public string? id { get; init; }
+			public string? name { get; init; }
+			public Role[]? roles { get; init; }
+			public User? user { get; init; }
+			public bool? require_colons { get; init; }
+			public bool? managed { get; init; }
+			public bool? animated { get; init; }
+			public bool? available { get; init; }
 		}
 	}
 
