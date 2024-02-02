@@ -26,14 +26,17 @@ namespace DiscordBot.Resources.Commands
 							{
 								name = "channel",
 								description = "Channel in which the modal is supposed to be sent to",
-								type = CommandOption.OptionType.CHANNEL
+								type = CommandOption.OptionType.CHANNEL,
+								required = true
 							},
-							/* new CommandOption()
+							 new CommandOption()
 							{
-								name = "",
-								description = "",
-								type = Command,
-							}*/
+								name = "number_of_menus",
+								description = "The amount of menu’s you want for your role selection",
+								type = CommandOption.OptionType.INTEGER,
+								min_value = 1,
+								max_value = 5
+							}
 						]
 					},
 				];

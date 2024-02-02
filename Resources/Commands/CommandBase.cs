@@ -89,6 +89,8 @@ namespace DiscordBot.Resources.Commands
 		public OptionChoice[]? choices { get; init; }
 		public CommandOption[]? options { get; init; }
 		public Channel.ChannelType[]? channel_types { get; init; }
+		public int min_value { get; init; }
+		public int max_value { get; init; }
 		public int min_length { get; init; }
 		public int max_length { get; init; }
 		public bool autocomplete { get; init; }
