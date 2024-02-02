@@ -1,4 +1,5 @@
 ﻿using DiscordBot.Resources.MessageComponents;
+using Org.BouncyCastle.Utilities;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
@@ -27,7 +28,7 @@ namespace DiscordBot.Resources.Commands
 								name = "channel",
 								description = "Channel in which the modal is supposed to be sent to",
 								type = CommandOption.OptionType.CHANNEL,
-								required = true
+								required = true,
 							},
 							 new CommandOption()
 							{
@@ -46,8 +47,9 @@ namespace DiscordBot.Resources.Commands
 		public static void HandleCommand(InteractionBase Interaction)
 		{
 			string ChannelID = (from option in (from option in Interaction.data!.options where option.name == "role_select" select option).First()!.options where option.name == "channel" select option).First().value!;
+			int NumberOfMenus = int.Parse((from option in (from option in Interaction.data!.options where option.name == "role_select" select option).First()!.options where option.name == "number_of_menus" select option).First().value!);
 			string roleRequest = RequestHandler.SendRequest(new(HttpMethod.Get, $"guilds/{Interaction.guild_id}/roles"));
-			Role[] Roles = JsonSerializer.Deserialize<Role[]>(roleRequest)!;
+			Role[] Roles = JsonSerializer.Deserialize<Role[]>(roleRequest)!.TakeWhile(x => x.permissions == "0").ToArray();
 
 			RequestHandler.SendRequest(new(HttpMethod.Post, $"channels/{ChannelID}/messages")
 			{

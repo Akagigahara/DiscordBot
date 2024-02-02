@@ -126,7 +126,7 @@ namespace DiscordBot.Resources.Commands
 
 	public class CommandOption<T> : CommandOption 
 	{
-		public T? min_value { get; init; }
-		public T? max_value { get; init; }
+		new public T? min_value { get; init; }
+		new public T? max_value { get; init; }
 	}
 }
