@@ -53,7 +53,7 @@ namespace DiscordBot.Resources.Commands
 						new ActionRow() 
 						{
 							type = ComponentBase.ComponentType.Action_Row,
-							component = [new SelectionComponent()
+							components = [new SelectionComponent()
 							{
 									type = ComponentBase.ComponentType.Role_Select,
 									custom_id = $"role_select_{ChannelID}",
