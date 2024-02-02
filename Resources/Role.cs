@@ -11,7 +11,7 @@
 		public int position { get; set; }
 		public required string permissions { get; set; }
 		public bool managed { get; set; }
-		public RoleTag[]? tags { get; set; }
+		public RoleTag? tags { get; set; }
 		public RoleFlag flags { get; set; }
 
 		public class RoleTag
