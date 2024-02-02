@@ -1,12 +1,12 @@
 ﻿using DiscordBot.Resources;
-using NSec.Cryptography;
+using DiscordBot.Resources.Commands;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.Utilities.Encoders;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.Net;
-using System.Net.Http.Json;
+using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 
@@ -14,12 +14,7 @@ namespace DiscordBot
 {
 	public class RequestHandler
 	{
-		readonly HttpClient client;
-
-		public RequestHandler()
-		{
-			client = new();
-		}
+		static readonly Dictionary<string, Action<InteractionBase.InteractionData>> Commands = new() { {"create", Create.HandleCommand }, };
 
 		public static void Listen()
 		{
@@ -32,7 +27,7 @@ namespace DiscordBot
 				while (listener.IsListening)
 				{
 					HttpListenerContext context = listener.GetContext();
-					Task.Run(() => RequestHandler.ResolveRequest(context));
+					Task.Run(() => ResolveRequest(context));
 				}
 			}
 			catch (Exception ex)
@@ -42,50 +37,58 @@ namespace DiscordBot
 			}
 		}
 
-		public string SendRequest(HttpRequestMessage Request)
+		public static string SendRequest(HttpRequestMessage Request)
 		{
-			HttpResponseMessage response = client.Send(Request);
+			HttpClient requester = new()
+			{
+				BaseAddress = new Uri("https://discord.com/api/v10/"),
+			};
+			requester.DefaultRequestHeaders.Add("Authorization", $"Bot {ConfigurationManager.AppSettings["token"]}");
+			HttpResponseMessage response = requester.Send(Request);
 			HttpContent content = response.Content;
-			return content.ReadFromJsonAsync<string>(JsonSerializerOptions.Default).Result!;
+			using (StreamReader reader = new(content.ReadAsStream()))
+			{
+				return reader.ReadToEnd();
+			}
 		}
 
-		public static void ResolveRequest(HttpListenerContext Request)
+		public static void ResolveRequest(HttpListenerContext Context)
 		{
-			NameValueCollection Headers = Request.Request.Headers;
-			string ParsedRequest = new StreamReader(Request.Request.InputStream, Request.Request.ContentEncoding).ReadToEnd();
+			HttpListenerRequest Request = Context.Request;
+			HttpListenerResponse Response = Context.Response;
 
-
-			Ed25519PublicKeyParameters PublicKeyParameter = new(Hex.DecodeStrict(ConfigurationManager.AppSettings["PublicKey"]!));
-			Byte[] DataToVerify = Encoding.UTF8.GetBytes(Headers["X-Signature-Timestamp"]! + ParsedRequest);
-			Byte[] SignatureBytes = Convert.FromHexString(Headers["X-Signature-Ed25519"]!);
-
-			Ed25519Signer Verifier = new();
-			Verifier.Init(false, PublicKeyParameter);
-			Verifier.BlockUpdate(DataToVerify, 0, DataToVerify.Length);
-			bool IsVerified = Verifier.VerifySignature(SignatureBytes);
+			string ParsedRequest = new StreamReader(Request.InputStream, Request.ContentEncoding).ReadToEnd();
+			bool IsVerified = VerifyRequest(Request.Headers, ParsedRequest);
 
 			if (!IsVerified)
 			{
-				Request.Response.StatusCode = 401;
-				using (StreamWriter Write = new(Request.Response.OutputStream))
+				Response.StatusCode = 401;
+				using (StreamWriter Write = new(Response.OutputStream))
 				{
 					Write.Write("invalid request signature");
-					
+
 				}
-				Request.Response.Close();
+				Response.Close();
 				return;
 			}
 
 			InteractionBase Interaction = JsonSerializer.Deserialize<InteractionBase>(ParsedRequest)!;
 			Console.WriteLine(ParsedRequest);
+			InteractionResponse? ResponseToSend = null;
 			switch (Interaction.type)
 			{
 				case InteractionBase.InteractionType.PING:
-					Request.Response.StatusCode = 200;
-					Request.Response.ContentType = "application/json";
-					JsonSerializer.Serialize(Request.Response.OutputStream, new InteractionResponse { type = InteractionResponse.InteractionCallbackType.PONG});
+					Response.StatusCode = 200;
+					Response.ContentType = "application/json";
+					ResponseToSend =  new InteractionResponse { type = InteractionResponse.InteractionCallbackType.PONG };
 					break;
 				case InteractionBase.InteractionType.APPLICATION_COMMAND:
+					InteractionBase.InteractionData data = Interaction.data!;
+					ResponseToSend = new()
+					{
+						type = InteractionResponse.InteractionCallbackType.CHANNEL_MESSAGE_WITH_SOURCE,
+					};
+					Task.Run(() => Commands[data.name].Invoke(data));
 					break;
 				case InteractionBase.InteractionType.MESSAGE_COMPONENT:
 					break;
@@ -94,8 +97,22 @@ namespace DiscordBot
 				case InteractionBase.InteractionType.MODAL_SUBMIT:
 					break;
 			}
+			JsonSerializer.Serialize(Response.OutputStream, ResponseToSend);
 			Console.WriteLine("Sending Message");
-			Request.Response.Close();
-			}
+			Response.Close();
+		}
+
+		private static bool VerifyRequest(NameValueCollection Headers, string ParsedRequest)
+		{
+			Ed25519PublicKeyParameters PublicKeyParameter = new(Hex.DecodeStrict(ConfigurationManager.AppSettings["PublicKey"]!));
+			Byte[] DataToVerify = Encoding.UTF8.GetBytes(Headers["X-Signature-Timestamp"]! + ParsedRequest);
+			Byte[] SignatureBytes = Convert.FromHexString(Headers["X-Signature-Ed25519"]!);
+
+			Ed25519Signer Verifier = new();
+			Verifier.Init(false, PublicKeyParameter);
+			Verifier.BlockUpdate(DataToVerify, 0, DataToVerify.Length);
+			bool IsVerified = Verifier.VerifySignature(SignatureBytes);
+			return IsVerified;
+		}
 	}
 }

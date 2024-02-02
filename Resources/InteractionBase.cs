@@ -11,7 +11,7 @@
 		public User? user { get; set; }
 		public required string token { get; set; }
 		public required int version { get; set; }
-		public Message? message { get; set; }
+		public MessageReceived? message { get; set; }
 		public string? app_permissions { get; set; }
 		public string? locale { get; set; }
 		public required Entitlement[] entitlements { get; set; }
@@ -57,7 +57,7 @@
 			public Dictionary<string, GuildMember>? members { get; set; }
 			public Dictionary<string, Role>? roles { get; set; }
 			public Dictionary<string, Channel>? channels { get; set; }
-			public Dictionary<string, Message>? messages { get; set; }
+			public Dictionary<string, MessageReceived>? messages { get; set; }
 			public Dictionary<string, Attachment>? attachments { get; set; }
 		}
 

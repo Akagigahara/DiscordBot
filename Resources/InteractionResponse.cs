@@ -5,7 +5,7 @@ namespace DiscordBot.Resources
 {
 	internal class InteractionResponse
 	{
-		public InteractionCallbackType type { get; set; }
+		public required InteractionCallbackType type { get; set; }
 		public InteractionCallbackBase? data { get; set; }
 
 		public enum InteractionCallbackType
