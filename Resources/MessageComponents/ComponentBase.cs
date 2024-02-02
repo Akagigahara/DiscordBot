@@ -12,6 +12,7 @@ namespace DiscordBot.Resources.MessageComponents
 		public abstract ComponentType type { get; init; }
 		public virtual string custom_id { get; init; } = "";
 		public virtual bool disabled { get; init; }
+		public virtual ComponentBase[] components { get; init; }
 
 		public enum ComponentType
 		{

@@ -12,6 +12,5 @@ namespace DiscordBot.Resources.MessageComponents
 		override public ComponentType type { get; init; } = ComponentType.Action_Row;
 		[JsonIgnore]
 		public override string custom_id { get => base.custom_id; init => base.custom_id = value; }
-		public required ComponentBase[] component { get; init; }
 	}
 }
