@@ -10,7 +10,7 @@ namespace DiscordBot.Resources.MessageComponents
 	public abstract class ComponentBase
 	{
 		public abstract ComponentType type { get; init; }
-		public virtual required string custom_id { get; init; }
+		public virtual string custom_id { get; init; }
 		public virtual int min_length { get; init; }
 		public virtual int max_length { get; init; }
 		public virtual bool disabled { get; init; }
