@@ -85,6 +85,8 @@ namespace DiscordBot
 					break;
 				case InteractionBase.InteractionType.APPLICATION_COMMAND:
 					InteractionBase.InteractionData data = Interaction.data!;
+					Response.StatusCode = 200;
+					Response.ContentType = "application/json";
 					ResponseToSend = new()
 					{
 						type = InteractionResponse.InteractionCallbackType.CHANNEL_MESSAGE_WITH_SOURCE,
