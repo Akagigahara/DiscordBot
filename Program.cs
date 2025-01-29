@@ -13,7 +13,7 @@ namespace DiscordBot
 {
 	internal class Program
 	{
-		private static readonly CommandBase[] commands = [new Create()];
+		private static readonly CommandBase[] commands = [];
 		static void Main()
 		{
 			Console.WriteLine("Hello, World!");
