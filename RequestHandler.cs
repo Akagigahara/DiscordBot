@@ -29,6 +29,7 @@ namespace DiscordBot
 				{
 					HttpListenerContext context = listener.GetContext();
 					Task.Run(() => ResolveRequest(context));
+					Console.WriteLine("Loop check");
 				}
 			}
 			catch (Exception ex)
