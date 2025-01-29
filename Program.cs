@@ -35,8 +35,8 @@ namespace DiscordBot
 
 				Task.Run(() => RequestHandler.Listen());
 
-				DatabaseHandler databaseHandler = new();
-				databaseHandler.Close();
+				//DatabaseHandler databaseHandler = new();
+				//databaseHandler.Close();
 
 				while(true)
 				{
