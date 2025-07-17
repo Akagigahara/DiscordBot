@@ -14,6 +14,7 @@ namespace DiscordBot
 
 		public static async Task Main()
 		{
+
 			_client.Log += Log;
 			_client.InteractionCreated += async (interaction) => 
 			{
@@ -39,6 +40,11 @@ namespace DiscordBot
 		{
 			Console.WriteLine(msg.ToString());
 			return Task.CompletedTask;
+		}
+
+		private static void ReadAppSettings()
+		{
+			string[] unparsedSettings = File.ReadAllLines("./settings.ini");
 		}
 	}
 }
