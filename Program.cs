@@ -11,10 +11,10 @@ namespace DiscordBot
 	{
 		private static DiscordSocketClient _client = new();
 		private static InteractionService _interactionService = new(_client.Rest);
+		private static Dictionary<string, string> appSettings = ReadAppSettings();
 
 		public static async Task Main()
 		{
-
 			_client.Log += Log;
 			_client.InteractionCreated += async (interaction) => 
 			{
@@ -29,7 +29,7 @@ namespace DiscordBot
 			_interactionService.Log += Log;
 			await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), null);
 
-			string token = "OTIxMzYzNTgyMTkxNTY2ODc4.GyNygq.HxRtRoi7-S8DrQw_Q28cB8qLG5W0yyf-fgnNXA";
+			string token = appSettings["token"];
 			await _client.LoginAsync(TokenType.Bot, token);
 			await _client.StartAsync();
 
@@ -42,9 +42,17 @@ namespace DiscordBot
 			return Task.CompletedTask;
 		}
 
-		private static void ReadAppSettings()
+		private static Dictionary<string, string> ReadAppSettings()
 		{
+			Dictionary<string, string> settings = new();
 			string[] unparsedSettings = File.ReadAllLines("./settings.ini");
+			foreach (string setting in unparsedSettings)
+			{
+				string[] parsedSetting = setting.Split('=');
+				settings[parsedSetting[0].Trim()] = parsedSetting[1].Trim();
+			}
+
+			return settings;
 		}
 	}
 }
