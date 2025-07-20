@@ -14,6 +14,9 @@ namespace DiscordBot
 {
 	public class GridGame : IGame
 	{
+		/// <summary>
+		/// 2-Dimensional Array representing the game grid. Each square/space of the game grid is represented by a <see cref="Grid"/> object. 
+		/// </summary>
 		private readonly Grid[,] grid =
 		{
 			{
@@ -47,11 +50,24 @@ namespace DiscordBot
 				new(),new(),new(),new(),new(),new(),new(),new(),new(),new(),
 			}
 		};
+		/// <summary>
+		/// A list containing all correct <see cref="Grid"/>s.
+		/// </summary>
 		private readonly List<Grid> correctGrids = [];
-		private readonly string[] currentSet;
+        /// <summary>
+        /// A list containing the current files that are used in the game.
+        /// </summary>
+        private readonly string[] currentSet;
+		/// <summary>
+		/// Field containing the message ID of the message containing a visual representation of the game grid.
+		/// </summary>
 		private ulong gridUI;
 
-		public string GridToString()
+        /// <summary>
+        /// Creates a <see langword="string"/> representation of the game grid.
+        /// </summary>
+        /// <returns>The stringified version of the game grid.</returns>
+        public string GridToString()
 		{
 			string result = $"";
 			byte index = 1;
@@ -85,12 +101,16 @@ namespace DiscordBot
             return Format.Code(result);
         }
 
-		public GridGame()
+        /// <summary>
+		/// Initializes a new grid game.
+		/// </summary>
+		/// <exception cref="FileNotFoundException">Exeption thrown when the directory containing the images, /pictures/, does not exist</exception>
+        public GridGame()
 		{
 			Random rand = new();
 			if (!Directory.Exists("./pictures/"))
 			{
-				throw new Exception("Directory not found");
+				throw new FileNotFoundException("Directory not found");
 			}
 			string[] collectionOfPictures = Directory.GetDirectories("./pictures/");
 			currentSet = Directory.GetFiles(collectionOfPictures[rand.Next(0,collectionOfPictures.Length-1)]);
@@ -111,16 +131,35 @@ namespace DiscordBot
 			}
 		}
 
-		private class Grid
+        /// <summary>
+        /// Class representing a single grid space in the game.
+        /// </summary>
+        private class Grid
 		{
-			internal bool HasBeenGuessed = false;
+            /// <summary>
+            /// <see cref="bool"/> representing whether the space has been guessed or not.
+            /// </summary>
+            internal bool HasBeenGuessed = false;
+			/// <summary>
+			/// <see cref="bool"/> representing whether the space is one of the correct spaces.
+			/// </summary>
 			internal bool IsTarget = false;
-			internal ulong guessedBy;
+            /// <summary>
+            /// Contains the ID of the user that guessed this space correctly.
+            /// </summary>
+            internal ulong guessedBy;
 		}
-
-		public class GridGameCommands : InteractionModuleBase<SocketInteractionContext>
+        /// <summary>
+        /// Class containing all slash commands for the grid game.
+        /// </summary>
+        public class GridGameCommands : InteractionModuleBase<SocketInteractionContext>
 		{
-			[EnabledInDm(false)]
+            /// <summary>
+            /// This function starts a new grid finder game.
+            /// </summary>
+            /// <param name="targetChannel">The channel the game is supposed to be played in.</param>
+            /// <returns>Task representing the action</returns>
+            [EnabledInDm(false)]
 			//[DefaultMemberPermissions(GuildPermission.ManageChannels)]
             [SlashCommand("startgame", "starts a new grid finder game")]
 			public async Task StartNewGame([ChannelTypes(ChannelType.Text)]IChannel? targetChannel = null)
@@ -148,6 +187,10 @@ namespace DiscordBot
 			}
 		}
 
+		/// <summary>
+		/// Checks all <see cref="correctGrids"/> and their <see cref="Grid.HasBeenGuessed"/> properties.
+		/// </summary>
+		/// <returns>True when all <see cref="correctGrids"/> have been guessed</returns>
 		private bool AreAllGuessed()
 		{
 			bool AllGuessed = false;
@@ -159,6 +202,12 @@ namespace DiscordBot
 			}
             return AllGuessed;
         }
+
+		/// <summary>
+		/// Function that returns the grid at the specified position.
+		/// </summary>
+		/// <param name="position">The desired <see cref="grid"/>.A number between 1-100</param>
+		/// <returns>The <see cref="Grid"/> at the specified position</returns>
         private Grid GetGrid(int position)
         {
 			int x = 0;
@@ -177,7 +226,11 @@ namespace DiscordBot
             return grid[x, y];
 		}
 
-		public void HandleAnswer(SocketModal modal)
+        /// <summary>
+        /// Function handling the answer submitted by the user in the modal.
+        /// </summary>
+        /// <param name="modal">Modal that created the interaction</param>
+        public void HandleAnswer(SocketModal modal)
 		{
 			byte answer = 0;
 			try
