@@ -12,6 +12,7 @@ namespace DiscordBot
 		private static DiscordSocketClient _client = new();
 		private static InteractionService _interactionService = new(_client.Rest);
 		private static readonly Dictionary<string, string> appSettings = ReadAppSettings();
+		internal static Dictionary<ulong, IGame> runningGames = [];
 
 		public static async Task Main()
 		{
@@ -35,7 +36,7 @@ namespace DiscordBot
 			await _client.LoginAsync(TokenType.Bot, token);
 			await _client.StartAsync();
 
-			await Task.Delay(-1);
+			 await Task.Delay(-1);
 		}
 
 		private static Task Log(LogMessage msg)
@@ -47,29 +48,31 @@ namespace DiscordBot
 		private static async Task ModalHandler(SocketModal modal)
 		{
 			Log(new(LogSeverity.Info, "Modal handler", $"Modal interaction with ID {modal.Data.CustomId}"));
-			switch(modal.Data.CustomId)
+			string[] parsedCustomId = modal.Data.CustomId.Split('-');
+			switch(parsedCustomId[0])
 			{
-				case "answer_modal":
-					await modal.RespondAsync("Valid", ephemeral:true);
+				case "GridGameAnswerModal":
+					runningGames[(ulong)modal.GuildId].HandleAnswer(modal);
 					break;
 			}
 		}
 
 		private static async Task ButtonInteraction(SocketMessageComponent component)
 		{
-			switch (component.Data.CustomId)
+			string[] parsedCustomId = component.Data.CustomId.Split('-');
+			switch (parsedCustomId[0])
 			{
-				case "btn-1":
+				case "GridGameAnswerBtn":
 					//await component.RespondAsync("You clicked me!");
 					ModalBuilder modal = new ModalBuilder()
 						.WithTitle("Submit your number")
-						.WithCustomId("answer_modal")
+						.WithCustomId($"GridGameAnswerModal-{component.GuildId}")
 						.AddTextInput(
 							new TextInputBuilder()
 							.WithLabel("Enter your number")
 							.WithRequired(true)
 							.WithPlaceholder("0-100")
-							.WithCustomId("numberText")
+							.WithCustomId("numericAnswer")
 							.WithMinLength(1)
 							.WithMaxLength(3)
 						);
@@ -80,7 +83,7 @@ namespace DiscordBot
 
 		private static Dictionary<string, string> ReadAppSettings()
 		{
-			Dictionary<string, string> settings = new();
+			Dictionary<string, string> settings = [];
 			string[] unparsedSettings = File.ReadAllLines("./settings.ini");
 			foreach (string setting in unparsedSettings)
 			{
