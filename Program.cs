@@ -64,20 +64,8 @@ namespace DiscordBot
 			{
 				case "GridGameAnswerBtn":
 					//await component.RespondAsync("You clicked me!");
-					ModalBuilder modal = new ModalBuilder()
-						.WithTitle("Submit your number")
-						.WithCustomId($"GridGameAnswerModal-{component.GuildId}")
-						.AddTextInput(
-							new TextInputBuilder()
-							.WithLabel("Enter your number")
-							.WithRequired(true)
-							.WithPlaceholder("0-100")
-							.WithCustomId("numericAnswer")
-							.WithMinLength(1)
-							.WithMaxLength(3)
-						);
-					await component.RespondWithModalAsync(modal.Build());
-					break;
+					runningGames[(ulong)component.GuildId].HandleButton(component);
+                    break;
 			}
 		}
 
