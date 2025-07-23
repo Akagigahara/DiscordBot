@@ -150,9 +150,12 @@ namespace DiscordBot
 			/// </summary>
 			internal ulong guessedBy;
 		}
-		/// <summary>
-		/// Class containing all slash commands for the grid game.
-		/// </summary>
+        /// <summary>
+        /// Class containing all slash commands for the grid game.
+        /// </summary>
+        [NsfwCommand(true)]
+        [CommandContextType(InteractionContextType.Guild)]
+        [Discord.Interactions.Group("gridgame", "All commands related to grid game")]
 		public class GridGameCommands : InteractionModuleBase<SocketInteractionContext>
 		{
 			/// <summary>
@@ -160,9 +163,10 @@ namespace DiscordBot
 			/// </summary>
 			/// <param name="targetChannel">The channel the game is supposed to be played in.</param>
 			/// <returns>Task representing the action</returns>
-			[EnabledInDm(false)]
+			//[NsfwCommand(true)]
+			//[CommandContextType(InteractionContextType.Guild)]
 			//[DefaultMemberPermissions(GuildPermission.ManageChannels)]
-			[SlashCommand("startgame", "starts a new grid finder game")]
+			[SlashCommand("start", "Starts a new grid finder game")]
 			public async Task StartNewGame([ChannelTypes(ChannelType.Text)] IChannel? targetChannel = null)
 			{
 				if (!Program.runningGames.ContainsKey(Context.Guild.Id))
@@ -178,14 +182,60 @@ namespace DiscordBot
 					else
 					{
 						await RespondAsync($"Starting a new game in <#{targetChannel.Id}>", ephemeral: true);
-						await ((IMessageChannel)targetChannel).SendFileAsync("mietzi.jpg");
-					}
+                        ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
+                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
+                        newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
+                    }
 				}
 				else
 				{
 					await RespondAsync("There is currently a running game.", ephemeral: true);
 				}
 			}
+
+			[SlashCommand("end", "Ends a currently running game")]
+			public async Task EndGame()
+			{
+				if (Program.runningGames.ContainsKey(Context.Guild.Id))
+				{
+					_ = RespondAsync("Ending game.");
+					Program.runningGames.Remove(Context.Guild.Id);
+				}
+				else
+				{
+					_ = RespondAsync("No game is currently running", ephemeral:true);
+				}
+			}
+
+			[SlashCommand("restart", "Ends the currently running game and starts a new one")]
+			public async Task RestartGame([ChannelTypes(ChannelType.Text)] IChannel? targetChannel = null)
+			{
+                if (Program.runningGames.ContainsKey(Context.Guild.Id))
+                {
+                    _= RespondAsync("Ending game.");
+                    Program.runningGames.Remove(Context.Guild.Id);
+                    GridGame newGame = new();
+                    Program.runningGames.Add(Context.Guild.Id, newGame);
+                    if (targetChannel == null)
+                    {
+                        ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
+                        await FollowupWithFileAsync((Program.runningGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
+                        newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
+                    }
+                    else
+                    {
+                        await FollowupAsync($"Starting a new game in <#{targetChannel.Id}>", ephemeral: true);
+                        ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
+                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
+                        newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
+                    }
+                }
+                else
+                {
+                    RespondAsync("No game is currently running", ephemeral: true);
+                }
+            }
+
 		}
 
 		/// <summary>
@@ -233,14 +283,16 @@ namespace DiscordBot
 		/// <param name="modal">Modal that created the interaction</param>
 		public void HandleAnswer(SocketModal modal)
 		{
-			byte answer = 0;
-			byte answerIndex = 1;
 			if (playersOnCD.Contains(modal.User.Id))
 			{
 				modal.RespondAsync("You are currently on cooldown", ephemeral: true);
 				return;
 			}
-			modal.RespondAsync("Processing…", ephemeral: true);
+
+			byte answer = 0;
+			byte answerIndex = 1;
+
+			modal.DeferAsync();
 			foreach (SocketMessageComponentData data in modal.Data.Components)
 			{
 				try
@@ -274,7 +326,7 @@ namespace DiscordBot
 				}
 				else
 				{
-					modal.RespondAsync("Space has already been guessed. Please select another one", ephemeral: true);
+					modal.FollowupAsync("Space has already been guessed. Please select another one", ephemeral: true);
 				}
 
 				if (AreAllGuessed())
