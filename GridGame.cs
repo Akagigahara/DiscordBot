@@ -63,6 +63,7 @@ namespace DiscordBot
 		/// </summary>
 		private ulong gridUI;
 		private readonly List<ulong> playersOnCD = [];
+		private Dictionary<string, string> metaData = [];
 
 		/// <summary>
 		/// Creates a <see langword="string"/> representation of the game grid.
@@ -115,20 +116,26 @@ namespace DiscordBot
 			}
 			string[] collectionOfPictures = Directory.GetDirectories("./pictures/");
 			currentSet = Directory.GetFiles(collectionOfPictures[rand.Next(0, collectionOfPictures.Length - 1)]);
-			foreach (string file in currentSet)
-			{
-				if (file.Contains("picture.metadata"))
-				{
-					string[] metadata = File.ReadAllLines(file);
-					string[] correctSpaces = metadata[0].Split('=')[1].Split(',');
-					foreach (string space in correctSpaces)
-					{
-						byte index = byte.Parse(space);
-						GetGrid(index).IsTarget = true;
-						correctGrids.Add(GetGrid(index));
 
-					}
+			string metaDataFile = currentSet.First(x => x.Contains("picture.metadata"));
+			foreach(string setting in File.ReadAllLines(metaDataFile))
+			{
+				string[] parsedSetting = setting.Split('=');
+				metaData.Add(parsedSetting[0].Trim(), parsedSetting[1].Trim());
+			}
+			if (!metaData.ContainsKey("correctSpaces"))
+			{
+				foreach( KeyValuePair<string, string> pair in metaData)
+				{
+					Console.WriteLine(pair.Key + pair.Value);
 				}
+			}
+			foreach(string square in metaData["correctSpaces"].Split(',') )
+			{
+				byte index = byte.Parse(square);
+				Grid grid = GetGrid(index);
+				grid.IsTarget = true;
+				correctGrids.Add(grid);
 			}
 		}
 
@@ -316,7 +323,7 @@ namespace DiscordBot
 
                     if (selectedGrid.IsTarget)
 					{
-                        modal.FollowupAsync($"Your {answerIndex}. guess, {answer}, was correct!",ephemeral:true);
+                        modal.FollowupAsync($"Your {answerIndex}. guess, {answer}, was correct!");
 					}
                     else
 					{
@@ -332,13 +339,14 @@ namespace DiscordBot
 				if (AreAllGuessed())
 				{
 					string FoundBy = "";
+					string Artist = metaData.TryGetValue("artist", out string? value) ? $"Artist: {value}\n" : "";
 					byte index = 1;
 					foreach (Grid correctSpace in correctGrids)
 					{
 						FoundBy += $"Space {index++} was found by <@{correctSpace.guessedBy}>\n";
 					}
 					modal.FollowupAsync("All spaces have been found!");
-					modal.FollowupWithFilesAsync([new FileAttachment(currentSet[1]), new FileAttachment(currentSet[0])], $"Here is the solution and the reward!\n" + FoundBy);
+					modal.FollowupWithFilesAsync([new FileAttachment(currentSet[1]), new FileAttachment(currentSet[0])], $"Here is the solution and the reward!\n" + FoundBy + Artist + $"submitted by <@{metaData["submittedBy"]}>");
 					Program.runningGames.Remove((ulong)modal.GuildId);
 				}
 			}
@@ -353,7 +361,7 @@ namespace DiscordBot
 		{
 			byte num = 1;
 			ModalBuilder modalBuilder = new ModalBuilder().WithTitle("Submit your number").WithCustomId($"GridGameAnswerModal-{button.GuildId}");
-			foreach (GridGame.Grid correctGrid in this.correctGrids)
+			foreach (Grid correctGrid in correctGrids.Where(x => !x.HasBeenGuessed))
 			{
 				modalBuilder.AddTextInput(new TextInputBuilder()
 					.WithLabel($"Enter your {num}. number")
