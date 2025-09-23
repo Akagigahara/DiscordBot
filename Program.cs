@@ -12,7 +12,8 @@ namespace DiscordBot
 		private static DiscordSocketClient _client = new();
 		private static InteractionService _interactionService = new(_client.Rest);
 		private static readonly Dictionary<string, string> appSettings = ReadAppSettings();
-		internal static Dictionary<ulong, IGame> runningGames = [];
+		internal static Dictionary<ulong, IGame> runningUniqueGames = [];
+		internal static Dictionary<ulong, IGame[]> runningGenericGames = [];
 
 		public static async Task Main()
 		{
@@ -52,7 +53,7 @@ namespace DiscordBot
 			switch(parsedCustomId[0])
 			{
 				case "GridGameAnswerModal":
-					runningGames[(ulong)modal.GuildId].HandleAnswer(modal);
+					runningUniqueGames[(ulong)modal.GuildId].HandleAnswer(modal);
 					break;
 			}
 		}
@@ -64,7 +65,7 @@ namespace DiscordBot
 			{
 				case "GridGameAnswerBtn":
 					//await component.RespondAsync("You clicked me!");
-					runningGames[(ulong)component.GuildId].HandleButton(component);
+					runningUniqueGames[(ulong)component.GuildId].HandleButton(component);
                     break;
 			}
 		}

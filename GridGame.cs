@@ -176,21 +176,21 @@ namespace DiscordBot
 			[SlashCommand("start", "Starts a new grid finder game")]
 			public async Task StartNewGame([ChannelTypes(ChannelType.Text)] IChannel? targetChannel = null)
 			{
-				if (!Program.runningGames.ContainsKey(Context.Guild.Id))
+				if (!Program.runningUniqueGames.ContainsKey(Context.Guild.Id))
 				{
 					GridGame newGame = new();
-					Program.runningGames.Add(Context.Guild.Id, newGame);
+					Program.runningUniqueGames.Add(Context.Guild.Id, newGame);
 					if (targetChannel == null)
 					{
 						ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-						await RespondWithFileAsync((Program.runningGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
+						await RespondWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)?.currentSet[2], components: builder.Build());
 						newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
 					}
 					else
 					{
 						await RespondAsync($"Starting a new game in <#{targetChannel.Id}>", ephemeral: true);
                         ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
+                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)?.currentSet[2], components: builder.Build());
                         newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
                     }
 				}
@@ -203,10 +203,10 @@ namespace DiscordBot
 			[SlashCommand("end", "Ends a currently running game")]
 			public async Task EndGame()
 			{
-				if (Program.runningGames.ContainsKey(Context.Guild.Id))
+				if (Program.runningUniqueGames.ContainsKey(Context.Guild.Id))
 				{
 					_ = RespondAsync("Ending game.");
-					Program.runningGames.Remove(Context.Guild.Id);
+					Program.runningUniqueGames.Remove(Context.Guild.Id);
 				}
 				else
 				{
@@ -217,23 +217,23 @@ namespace DiscordBot
 			[SlashCommand("restart", "Ends the currently running game and starts a new one")]
 			public async Task RestartGame([ChannelTypes(ChannelType.Text)] IChannel? targetChannel = null)
 			{
-                if (Program.runningGames.ContainsKey(Context.Guild.Id))
+                if (Program.runningUniqueGames.ContainsKey(Context.Guild.Id))
                 {
                     _= RespondAsync("Ending game.");
-                    Program.runningGames.Remove(Context.Guild.Id);
+                    Program.runningUniqueGames.Remove(Context.Guild.Id);
                     GridGame newGame = new();
-                    Program.runningGames.Add(Context.Guild.Id, newGame);
+                    Program.runningUniqueGames.Add(Context.Guild.Id, newGame);
                     if (targetChannel == null)
                     {
                         ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                        await FollowupWithFileAsync((Program.runningGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
+                        await FollowupWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
                         newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
                     }
                     else
                     {
                         await FollowupAsync($"Starting a new game in <#{targetChannel.Id}>", ephemeral: true);
                         ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
+                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
                         newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
                     }
                 }
@@ -347,7 +347,7 @@ namespace DiscordBot
 					}
 					modal.FollowupAsync("All spaces have been found!");
 					modal.FollowupWithFilesAsync([new FileAttachment(currentSet[1]), new FileAttachment(currentSet[0])], $"Here is the solution and the reward!\n" + FoundBy + Artist + $"submitted by <@{metaData["submittedBy"]}>");
-					Program.runningGames.Remove((ulong)modal.GuildId);
+					Program.runningUniqueGames.Remove((ulong)modal.GuildId);
 				}
 			}
             modal.Channel.ModifyMessageAsync(gridUI, (properties) =>

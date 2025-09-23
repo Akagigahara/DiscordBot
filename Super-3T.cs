@@ -1,12 +1,44 @@
 ﻿using Discord.Commands;
+using SixLabors.ImageSharp;
 using Discord.Interactions;
+using SixLabors.ImageSharp.Formats.Tga;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Drawing.Processing;
+using Discord.WebSocket;
 
 namespace DiscordBot
 {
 
-	internal class Super_3T
+	internal class Super_3T : IGame
 	{
+		public ulong gameId;
 		private ulong gameUI;
+		private readonly Image<Rgb24> image = new(900, 900);
+
+		public Super_3T(long gameId)
+		{
+			this.gameId = (ulong)gameId;
+			image.Mutate(
+				x =>
+				{
+					int width = image.Width;
+					int height = image.Height;
+
+                    for (int i = 1; i < 9; i++)
+                    {
+                        //vertical lines
+                        x.DrawLine(Color.Blue, 5, [new Point(width * (i) / 9, 0), new Point(width * (i) / 9, height)]);
+                        //horizontal lines
+                        x.DrawLine(Color.Blue, 5, [new Point(0, height * (i) / 9), new Point(width, height * (i) / 9)]);
+                    }
+                    for (byte i = 1; i < 4; i++)
+					{
+						x.DrawLine(Color.Red, 5, [new Point(width * (i) / 3, 0), new Point(width * (i) / 3, height)]);
+						x.DrawLine(Color.Red, 5, [new Point(0, height * (i) / 3), new Point(width, height * (i) / 3)]);
+					}
+				});
+		}
 
 		SmallGrid[,] Grid =
 		{
@@ -15,14 +47,14 @@ namespace DiscordBot
 			{ new(), new(), new() },
 		};
 
+			/*
 		private string GridToString()
 		{
-			return $"{}|{}|{}┃{}|{}|{}┃{}|{}|{}" +
-				   $"-+-+-┃-+-+-┃-+-+-" +
-				   $"{}|{}|{}┃{}|{}|{}┃{}|{}|{}" +
-                   $"-+-+-┃-+-+-┃-+-+-" +
-                   $"{}|{}|{}┃{}|{}|{}┃{}|{}|{}";
+			Image<Rgb24> png = new (55, 55);
+			png.mut
+			return;
 		}
+			*/
 
 		public void CheckGameState()
 		{
@@ -61,7 +93,17 @@ namespace DiscordBot
 		{
 
 		}
-	}
+
+        public void HandleAnswer(SocketModal modal)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void HandleButton(SocketMessageComponent button)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
 	internal class SmallGrid
 	{
@@ -149,7 +191,11 @@ namespace DiscordBot
 		[SlashCommand("start", "Starts a game of Super Tic-Tac-Toe")]
 		public async Task StartS3T() 
 		{
-
+			if (!Program.runningGenericGames.ContainsKey(Context.Guild.Id))
+			{
+				Program.runningGenericGames.Add(Context.Guild.Id, []);
+			}
+			Super_3T newGame = new(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
 		}
 	}
 }
