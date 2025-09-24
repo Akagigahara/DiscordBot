@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -290,12 +291,6 @@ namespace DiscordBot
 		/// <param name="modal">Modal that created the interaction</param>
 		public void HandleAnswer(SocketModal modal)
 		{
-			if (playersOnCD.Contains(modal.User.Id))
-			{
-				modal.RespondAsync("You are currently on cooldown", ephemeral: true);
-				return;
-			}
-
 			byte answer = 0;
 			byte answerIndex = 1;
 
@@ -359,7 +354,13 @@ namespace DiscordBot
         }
 		public void HandleButton(SocketMessageComponent button)
 		{
-			byte num = 1;
+            if (playersOnCD.Contains(button.User.Id))
+            {
+                button.RespondAsync("You are currently on cooldown", ephemeral: true);
+                return;
+            }
+
+            byte num = 1;
 			ModalBuilder modalBuilder = new ModalBuilder().WithTitle("Submit your number").WithCustomId($"GridGameAnswerModal-{button.GuildId}");
 			foreach (Grid correctGrid in correctGrids.Where(x => !x.HasBeenGuessed))
 			{
