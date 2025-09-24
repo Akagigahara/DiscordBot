@@ -183,7 +183,7 @@ namespace DiscordBot
 					if (targetChannel == null)
 					{
 						ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-						await RespondWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)?.currentSet[2], components: builder.Build());
+						await RespondWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)?.currentSet.First(file => file.Contains("3")), components: builder.Build());
 						newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
 					}
 					else
