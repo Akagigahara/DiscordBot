@@ -191,7 +191,7 @@ namespace DiscordBot
 					{
 						await RespondAsync($"Starting a new game in <#{targetChannel.Id}>", ephemeral: true);
                         ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)?.currentSet[2], components: builder.Build());
+                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)?.currentSet.First(file => file.Contains('3')), components: builder.Build());
                         newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
                     }
 				}
@@ -227,14 +227,14 @@ namespace DiscordBot
                     if (targetChannel == null)
                     {
                         ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                        await FollowupWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame).currentSet.First(file => file.Contains('3')), components: builder.Build());
+                        await FollowupWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.currentSet.First(file => file.Contains('3')), components: builder.Build());
                         newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
                     }
                     else
                     {
                         await FollowupAsync($"Starting a new game in <#{targetChannel.Id}>", ephemeral: true);
                         ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame).currentSet[2], components: builder.Build());
+                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.currentSet.First(file => file.Contains('3')), components: builder.Build());
                         newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
                     }
                 }
@@ -341,7 +341,7 @@ namespace DiscordBot
 						FoundBy += $"Space {index++} was found by <@{correctSpace.guessedBy}>\n";
 					}
 					modal.FollowupAsync("All spaces have been found!");
-					modal.FollowupWithFilesAsync([new FileAttachment(currentSet[1]), new FileAttachment(currentSet[0])], $"Here is the solution and the reward!\n" + FoundBy + Artist + $"submitted by <@{metaData["submittedBy"]}>");
+					modal.FollowupWithFilesAsync([new FileAttachment(currentSet.First(file => file.Contains('2'))), new FileAttachment(currentSet.First(file => file.Contains('1')))], $"Here is the solution and the reward!\n" + FoundBy + Artist + $"submitted by <@{metaData["submittedBy"]}>");
 					Program.runningUniqueGames.Remove((ulong)modal.GuildId);
 				}
 			}
