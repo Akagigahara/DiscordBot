@@ -413,7 +413,7 @@ namespace DiscordBot
         
 		private async void RemovePlayerFromCD(ulong playerId)
         {
-            await Task.Delay(TimeSpan.FromMinutes(1.0));
+            await Task.Delay(TimeSpan.FromSeconds(30));
             this.playersOnCD.Remove(playerId);
         }
     }
