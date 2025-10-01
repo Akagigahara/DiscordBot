@@ -68,7 +68,7 @@ namespace DiscordBot
 			//Top right, bot left
 			else if (Grid[0, 2] == Grid[1, 1] && Grid[1, 1] == Grid[2, 0] && Grid[1, 1] != State.None)
 			{
-				WonBy = Grid[1, 1].GameState;
+                WonBy = Grid[1, 1].GameState;
 				return;
 			}
 			//All horizontal and vertical patterns

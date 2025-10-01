@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
+using SL= SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace DiscordBot
 {
@@ -63,8 +68,15 @@ namespace DiscordBot
 		/// Field containing the message ID of the message containing a visual representation of the game grid.
 		/// </summary>
 		private ulong gridUI;
+		/// <summary>
+		/// List containing the snowflakes of players on cooldown
+		/// </summary>
 		private readonly List<ulong> playersOnCD = [];
+		/// <summary>
+		/// A dictionary containing the meta data for the image currently in play
+		/// </summary>
 		private Dictionary<string, string> metaData = [];
+		private SL.Image baseGrid = SL.Image.Load("./pictures/gridBase.png");
 
 		/// <summary>
 		/// Creates a <see langword="string"/> representation of the game grid.
@@ -103,6 +115,44 @@ namespace DiscordBot
 
 			return Format.Code(result);
 		}
+		/// <summary>
+		/// Drawing answer on the <see cref="baseGrid"/>
+		/// </summary>
+		/// <param name="Grid">The space guessed</param>
+		public void MarkOnGrid(int position)
+		{
+			SL.Color wrongSpace = SL.Color.Red;
+			SL.Color correctSpace = SL.Color.Green;
+			
+
+			PointF[] topLeftLine = { new(0, 0), new(30, 30) };
+			PointF[] TopRightLine = [new(30,0), new(0, 30)];
+
+			int x, y;
+
+            if (position % 10 == 0)
+            {
+                y = position / 10 - 1;
+                x = 9;
+            }
+            else
+            {
+                y = (int)Math.Floor(position / 10.0);
+                x = position % 10 - 1;
+            }
+
+			topLeftLine[0].Offset(x*30, y*30);
+			topLeftLine[1].Offset(x*30, y*30);
+			TopRightLine[0].Offset(x*30, y*30);
+			TopRightLine[1].Offset(x*30, y*30);
+
+			baseGrid.Mutate(image =>
+			{
+				image.DrawLine(GetGrid(position).IsTarget ? correctSpace : wrongSpace, 5, topLeftLine);
+				image.DrawLine(GetGrid(position).IsTarget ?  correctSpace : wrongSpace, 5, TopRightLine);
+			});
+
+        }
 
 		/// <summary>
 		/// Initializes a new grid game.
@@ -171,29 +221,19 @@ namespace DiscordBot
 			/// </summary>
 			/// <param name="targetChannel">The channel the game is supposed to be played in.</param>
 			/// <returns>Task representing the action</returns>
-			//[NsfwCommand(true)]
-			//[CommandContextType(InteractionContextType.Guild)]
-			//[DefaultMemberPermissions(GuildPermission.ManageChannels)]
 			[SlashCommand("start", "Starts a new grid finder game")]
-			public async Task StartNewGame([ChannelTypes(ChannelType.Text)] IChannel? targetChannel = null)
+			public async Task StartNewGame()
 			{
 				if (!Program.runningUniqueGames.ContainsKey(Context.Guild.Id))
 				{
 					GridGame newGame = new();
 					Program.runningUniqueGames.Add(Context.Guild.Id, newGame);
-					if (targetChannel == null)
-					{
-						ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-						await RespondWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)?.currentSet.First(file => file.Contains('3')), components: builder.Build());
-						newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
-					}
-					else
-					{
-						await RespondAsync($"Starting a new game in <#{targetChannel.Id}>", ephemeral: true);
-                        ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)?.currentSet.First(file => file.Contains('3')), components: builder.Build());
-                        newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
-                    }
+					MemoryStream fileStream = new();
+					ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
+					await RespondWithFileAsync(newGame.currentSet.First(file => file.Contains('3')), components: builder.Build());
+					newGame.baseGrid.Save(fileStream, new PngEncoder());
+					newGame.gridUI = FollowupWithFileAsync(fileStream, "grid.png").Result.Id;
+                    
 				}
 				else
 				{
@@ -216,7 +256,7 @@ namespace DiscordBot
 			}
 
 			[SlashCommand("restart", "Ends the currently running game and starts a new one")]
-			public async Task RestartGame([ChannelTypes(ChannelType.Text)] IChannel? targetChannel = null)
+			public async Task RestartGame()
 			{
                 if (Program.runningUniqueGames.ContainsKey(Context.Guild.Id))
                 {
@@ -224,19 +264,11 @@ namespace DiscordBot
                     Program.runningUniqueGames.Remove(Context.Guild.Id);
                     GridGame newGame = new();
                     Program.runningUniqueGames.Add(Context.Guild.Id, newGame);
-                    if (targetChannel == null)
-                    {
-                        ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                        await FollowupWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.currentSet.First(file => file.Contains('3')), components: builder.Build());
-                        newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
-                    }
-                    else
-                    {
-                        await FollowupAsync($"Starting a new game in <#{targetChannel.Id}>", ephemeral: true);
-                        ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                        await ((IMessageChannel)targetChannel).SendFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.currentSet.First(file => file.Contains('3')), components: builder.Build());
-                        newGame.gridUI = FollowupAsync(newGame.GridToString()).Result.Id;
-                    }
+					MemoryStream fileStream = new();
+                    ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
+                    await FollowupWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.currentSet.First(file => file.Contains('3')), components: builder.Build());
+					newGame.baseGrid.Save(fileStream, new PngEncoder());
+                    newGame.gridUI = FollowupWithFileAsync(fileStream, "grid.png").Result.Id;
                 }
                 else
                 {
@@ -274,15 +306,15 @@ namespace DiscordBot
 
 			if (position % 10 == 0)
 			{
-				x = position / 10 - 1;
-				y = 9;
+				y = position / 10 - 1;
+				x = 9;
 			}
 			else
 			{
-				x = (int)Math.Floor(position / 10.0);
-				y = position % 10 - 1;
+				y = (int)Math.Floor(position / 10.0);
+				x = position % 10 - 1;
 			}
-			return grid[x, y];
+			return grid[y, x];
 		}
 
 		/// <summary>
@@ -325,6 +357,7 @@ namespace DiscordBot
                         modal.FollowupAsync($"Your {answerIndex}. guess, {answer}, was incorrect, try again!", ephemeral: true);
 					}
 					answerIndex++;
+					MarkOnGrid(answer);
 				}
 				else
 				{
@@ -345,9 +378,12 @@ namespace DiscordBot
 					Program.runningUniqueGames.Remove((ulong)modal.GuildId);
 				}
 			}
+			MemoryStream fileStream = new();
+			baseGrid.Save(fileStream, new PngEncoder());
+
             modal.Channel.ModifyMessageAsync(gridUI, (properties) =>
             {
-                properties.Content = GridToString();
+				properties.Attachments = new Optional<IEnumerable<FileAttachment>>([new FileAttachment(fileStream, "grid.png")]);
             });
 			playersOnCD.Add(modal.User.Id);
 			RemovePlayerFromCD(modal.User.Id);
