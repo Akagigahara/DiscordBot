@@ -290,7 +290,7 @@ namespace DiscordBot
             }
 
 			[SlashCommand("setting", "Change one of the settings for grid game.")]
-			public async Task ChangeSettings(string? cooldown, IRole role)
+			public async Task ChangeSettings(string? cooldown = null, IRole? role = null)
 			{
 				RespondAsync("Settings received.", ephemeral: true);
 				if (Program.runningUniqueGames.ContainsKey(Context.Guild.Id))
