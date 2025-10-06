@@ -76,6 +76,7 @@ namespace DiscordBot
 		/// A dictionary containing the meta data for the image currently in play
 		/// </summary>
 		private Dictionary<string, string> metaData = [];
+		private Dictionary<string, string> settings = [];
 		private SL.Image baseGrid = SL.Image.Load("./pictures/gridBase.png");
 
 		/// <summary>
@@ -158,21 +159,23 @@ namespace DiscordBot
 		/// Initializes a new grid game.
 		/// </summary>
 		/// <exception cref="FileNotFoundException">Exeption thrown when the directory containing the images, /pictures/, does not exist</exception>
-		public GridGame()
+		public GridGame(ulong guildId)
 		{
 			Random rand = new();
 			if (!Directory.Exists("./pictures/"))
 			{
 				throw new FileNotFoundException("Directory not found");
 			}
+
+			LoadSettings(guildId);
 			string[] collectionOfPictures = Directory.GetDirectories("./pictures/");
 			currentSet = Directory.GetFiles(collectionOfPictures[rand.Next(0, collectionOfPictures.Length - 1)]);
 
 			string metaDataFile = currentSet.First(x => x.Contains("picture.metadata"));
-			foreach(string setting in File.ReadAllLines(metaDataFile))
+			foreach(string metaData in File.ReadAllLines(metaDataFile))
 			{
-				string[] parsedSetting = setting.Split('=');
-				metaData.Add(parsedSetting[0].Trim(), parsedSetting[1].Trim());
+				string[] parsedMetaData = metaData.Split('=');
+				this.metaData.Add(parsedMetaData[0].Trim(), parsedMetaData[1].Trim());
 			}
 			if (!metaData.ContainsKey("correctSpaces"))
 			{
@@ -226,14 +229,19 @@ namespace DiscordBot
 			{
 				if (!Program.runningUniqueGames.ContainsKey(Context.Guild.Id))
 				{
-					GridGame newGame = new();
+					GridGame newGame = new(Context.Guild.Id);
 					Program.runningUniqueGames.Add(Context.Guild.Id, newGame);
 					MemoryStream fileStream = new();
-					ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-					await RespondWithFileAsync(newGame.currentSet.First(file => file.Contains('3')), components: builder.Build());
+
+					await RespondWithFileAsync(
+						newGame.currentSet.First(file => file.Contains("3.")),
+						text: newGame.settings["role"] != "null" ? $"<@&{newGame.settings["role"]}>" : "",
+                        components: new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}").Build(),
+						allowedMentions: AllowedMentions.All
+					);
+
 					newGame.baseGrid.Save(fileStream, new PngEncoder());
 					newGame.gridUI = FollowupWithFileAsync(fileStream, "grid.png").Result.Id;
-                    
 				}
 				else
 				{
@@ -262,11 +270,11 @@ namespace DiscordBot
                 {
                     _= RespondAsync("Ending game.");
                     Program.runningUniqueGames.Remove(Context.Guild.Id);
-                    GridGame newGame = new();
+                    GridGame newGame = new(Context.Guild.Id);
                     Program.runningUniqueGames.Add(Context.Guild.Id, newGame);
 					MemoryStream fileStream = new();
                     ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                    await FollowupWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.currentSet.First(file => file.Contains('3')), components: builder.Build());
+                    await FollowupWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.currentSet.First(file => file.Contains("3.")), components: builder.Build());
 					newGame.baseGrid.Save(fileStream, new PngEncoder());
                     newGame.gridUI = FollowupWithFileAsync(fileStream, "grid.png").Result.Id;
                 }
@@ -275,6 +283,30 @@ namespace DiscordBot
                     RespondAsync("No game is currently running", ephemeral: true);
                 }
             }
+
+			[SlashCommand("setting", "Change one of the settings for grid game.")]
+			public async Task ChangeSettings(string? cooldown, IRole role)
+			{
+				RespondAsync("Settings received.", ephemeral: true);
+				if (Program.runningUniqueGames.ContainsKey(Context.Guild.Id))
+				{
+					(Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.UpdateSettings(cooldown, role, Context.Guild.Id);
+				}
+				else
+				{
+                    string configs = File.ReadAllText($"./configs/{Context.Guild.Id}/gridGame.config");
+					string[] parsedSettingsLines = configs.Split("\n");
+					if (cooldown is not null)
+					{
+						configs = configs.Replace(parsedSettingsLines[0].Split('=')[1].Trim(), cooldown);
+					}
+					if (role is not null)
+					{
+						configs = configs.Replace(parsedSettingsLines[1].Split('=')[1].Trim(), $"{role.Id}");
+					}
+                    File.WriteAllBytes($"./configs/{Context.Guild.Id}/gridGame.config", Encoding.UTF8.GetBytes(configs));
+                }
+			}
 
 		}
 
@@ -367,15 +399,20 @@ namespace DiscordBot
 				if (AreAllGuessed())
 				{
 					string FoundBy = "";
-					string Artist = metaData.TryGetValue("artist", out string? value) ? $"Artist: {value}\n" : "";
+					string Artist = metaData.TryGetValue("artist", out string? value) ? $"Artist/Model: {value}\n" : "";
 					byte index = 1;
 					foreach (Grid correctSpace in correctGrids)
 					{
 						FoundBy += $"Space {index++} was found by <@{correctSpace.guessedBy}>\n";
 					}
 					modal.FollowupAsync("All spaces have been found!");
-					modal.FollowupWithFilesAsync([new FileAttachment(currentSet.First(file => file.Contains('2'))), new FileAttachment(currentSet.First(file => file.Contains('1')))], $"Here is the solution and the reward!\n" + FoundBy + Artist + $"submitted by <@{metaData["submittedBy"]}>");
-					Program.runningUniqueGames.Remove((ulong)modal.GuildId);
+					modal.FollowupWithFilesAsync(
+						[new FileAttachment(currentSet.First(file => file.Contains("2."))),
+						new FileAttachment(currentSet.First(file => file.Contains("1.")))],
+						$"Here is the solution and the reward!\n" + FoundBy + Artist + $"submitted by <@{metaData["submittedBy"]}>",
+						components: new ComponentBuilder().WithButton("Start new game", $"GridGameNewGameBtn-{modal.GuildId}").Build()
+					);
+					Program.runningUniqueGames.Remove((ulong)modal.GuildId!);
 				}
 			}
 			MemoryStream fileStream = new();
@@ -410,11 +447,68 @@ namespace DiscordBot
 			}
 			button.RespondWithModalAsync(modalBuilder.Build());
 		}
-        
+        /// <summary>
+		/// Used to remove a player from the <see cref="GridGame.playersOnCD"/> list.
+		/// </summary>
+		/// <param name="playerId">The Discord snowflake of the user that is to be removed.</param>
 		private async void RemovePlayerFromCD(ulong playerId)
         {
-            await Task.Delay(TimeSpan.FromSeconds(30));
+            await Task.Delay(TimeSpan.FromSeconds(int.Parse(settings["cooldown"])));
             this.playersOnCD.Remove(playerId);
+        }
+
+
+		/// <summary>
+		/// Handles the start of a new grid game through the button on the finished game.
+		/// </summary>
+		/// <param name="button">The component which caused this interaction</param>
+		public static async void StartNewGame(SocketMessageComponent button)
+		{
+            GridGame newGame = new((ulong)button.GuildId!);
+            Program.runningUniqueGames.Add((ulong)button.GuildId!, newGame);
+            MemoryStream fileStream = new();
+            ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{button.GuildId}");
+            await button.RespondWithFileAsync(newGame.currentSet.First(file => file.Contains("3.")), components: builder.Build());
+            newGame.baseGrid.Save(fileStream, new PngEncoder());
+            newGame.gridUI = button.FollowupWithFileAsync(fileStream, "grid.png").Result.Id;
+        }
+
+		public void UpdateSettings(string? cooldown, IRole? role, ulong guildId)
+		{
+			string configs = File.ReadAllText($"./configs/{guildId}/gridGame.config");
+			if(cooldown is not null)
+			{
+				configs = configs.Replace(settings["cooldown"], cooldown);
+				settings["cooldown"] = cooldown;
+			}
+			if (role is not null)
+			{
+				configs = configs.Replace(settings["role"], $"{role.Id}");
+				settings["role"] = $"{role.Id}";
+			}
+			File.WriteAllBytes($"./configs/{guildId}/gridGame.config", Encoding.UTF8.GetBytes(configs));
+		}
+
+		public async void LoadSettings(ulong guildId)
+		{
+            if (!Directory.Exists($"./configs/{guildId}/"))
+            {
+                Directory.CreateDirectory($"./configs/{guildId}/");
+                FileStream config = File.Create($"./configs/{guildId}/gridGame.config");
+                string settings = "cooldown = 30 \n" +
+                                  "role = null";
+                config.Write(Encoding.UTF8.GetBytes(settings));
+                this.settings.Add("cooldown", "30");
+                this.settings.Add("role", "null");
+            }
+            else
+            {
+				foreach (string setting in File.ReadAllLines($"./configs/{guildId	}/gridGame.config"))
+				{
+					string[] parsedSettings = setting.Split('=');
+					this.settings.Add(parsedSettings[0].Trim(), parsedSettings[1].Trim());
+				}
+            }
         }
     }
 }

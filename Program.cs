@@ -4,6 +4,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.VisualBasic;
 using System.Reflection;
+using static DiscordBot.GridGame;
 
 namespace DiscordBot
 {
@@ -67,6 +68,9 @@ namespace DiscordBot
 					//await component.RespondAsync("You clicked me!");
 					runningUniqueGames[(ulong)component.GuildId].HandleButton(component);
                     break;
+				case "GridGameNewGameBtn":
+					GridGame.StartNewGame(component);
+					break;
 			}
 		}
 
