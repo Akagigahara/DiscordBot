@@ -274,7 +274,12 @@ namespace DiscordBot
                     Program.runningUniqueGames.Add(Context.Guild.Id, newGame);
 					MemoryStream fileStream = new();
                     ComponentBuilder builder = new ComponentBuilder().WithButton("Submit answer", $"GridGameAnswerBtn-{Context.Guild.Id}");
-                    await FollowupWithFileAsync((Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.currentSet.First(file => file.Contains("3.")), components: builder.Build());
+                    await FollowupWithFileAsync(
+						(Program.runningUniqueGames[Context.Guild.Id] as GridGame)!.currentSet.First(file => file.Contains("3.")),
+						text: newGame.settings["role"] != "null" ? $"<@&{newGame.settings["role"]}>" : "",
+						components: builder.Build(),
+						allowedMentions: AllowedMentions.All
+					);
 					newGame.baseGrid.Save(fileStream, new PngEncoder());
                     newGame.gridUI = FollowupWithFileAsync(fileStream, "grid.png").Result.Id;
                 }
