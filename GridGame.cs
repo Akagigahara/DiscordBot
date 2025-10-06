@@ -496,7 +496,7 @@ namespace DiscordBot
 
 		public async void LoadSettings(ulong guildId)
 		{
-            if (!Directory.Exists($"./configs/{guildId}/"))
+            if (!File.Exists($"./configs/{guildId}/gridGame.config"))
             {
                 Directory.CreateDirectory($"./configs/{guildId}/");
                 FileStream config = File.Create($"./configs/{guildId}/gridGame.config");
