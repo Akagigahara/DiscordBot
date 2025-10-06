@@ -41,7 +41,7 @@ namespace DiscordBot
 			 await Task.Delay(-1);
 		}
 
-		private static Task Log(LogMessage msg)
+		public static Task Log(LogMessage msg)
 		{
 			Console.WriteLine(msg.ToString());
 			return Task.CompletedTask;
@@ -66,7 +66,7 @@ namespace DiscordBot
 			{
 				case "GridGameAnswerBtn":
 					//await component.RespondAsync("You clicked me!");
-					runningUniqueGames[(ulong)component.GuildId].HandleButton(component);
+					runningUniqueGames[(ulong)component.GuildId!].HandleButton(component);
                     break;
 				case "GridGameNewGameBtn":
 					GridGame.StartNewGame(component);
