@@ -364,3 +364,11 @@ FodyWeavers.xsd
 /settings.ini
 /pictures/gridBase.png
 /Untitled.png
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.metadata
+*.config
+*.zip
+update.sh
