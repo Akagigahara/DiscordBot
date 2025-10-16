@@ -71,7 +71,11 @@ namespace DiscordBot
 				case "GridGameNewGameBtn":
 					GridGame.StartNewGame(component);
 					break;
-			}
+				case "GridGameSkipBtn":
+					(runningUniqueGames[(ulong)component.GuildId!] as GridGame)!.SkipCurrentGame(component);
+					break;
+
+            }
 		}
 
 		private static Dictionary<string, string> ReadAppSettings()
