@@ -488,34 +488,38 @@ namespace DiscordBot
 
 		public async void SkipCurrentGame(SocketMessageComponent button)
 		{
-			ulong guildId = (ulong)button.GuildId!;
-			if (++skipCounter == 3)
-			{
-				button.RespondAsync("Skipping current game.");
-				Program.runningUniqueGames.Remove(guildId);
-				GridGame newGame = new(guildId);
-				Program.runningUniqueGames.Add(guildId, newGame);
-				MemoryStream fileStream = new();
-                await button.FollowupWithFileAsync(
-                    newGame.currentSet.First(file => file.Contains("3.")),
-                    text: newGame.settings["role"] != "null" ? $"<@&{newGame.settings["role"]}>" : "",
-                    allowedMentions: AllowedMentions.All);
-                newGame.baseGrid.Save(fileStream, new PngEncoder());
-                newGame.gridUI = button.FollowupWithFileAsync(fileStream, "grid.png",
-                    components: buildGameButtons(guildId)).Result.Id;
-            }
-			else if(playersThatVotedSkip.Contains(button.User.Id))
+			if(playersThatVotedSkip.Contains(button.User.Id))
 			{
 				button.RespondAsync("You have already voted to skip this game.", ephemeral: true);
 			}
-            else
+			else
 			{
-				button.FollowupAsync("Skip vote registered.", ephemeral: true);
-				playersThatVotedSkip.Add(button.User.Id);
-                await button.UpdateAsync(message =>
+
+				ulong guildId = (ulong)button.GuildId!;
+				if (++skipCounter == 3)
 				{
-					message.Components = buildGameButtons(guildId, skipCounter);
-				});
+					button.RespondAsync("Skipping current game.");
+					Program.runningUniqueGames.Remove(guildId);
+					GridGame newGame = new(guildId);
+					Program.runningUniqueGames.Add(guildId, newGame);
+					MemoryStream fileStream = new();
+					await button.FollowupWithFileAsync(
+						newGame.currentSet.First(file => file.Contains("3.")),
+						text: newGame.settings["role"] != "null" ? $"<@&{newGame.settings["role"]}>" : "",
+						allowedMentions: AllowedMentions.All);
+					newGame.baseGrid.Save(fileStream, new PngEncoder());
+					newGame.gridUI = button.FollowupWithFileAsync(fileStream, "grid.png",
+						components: buildGameButtons(guildId)).Result.Id;
+				}
+				else
+				{
+					button.FollowupAsync("Skip vote registered.", ephemeral: true);
+					playersThatVotedSkip.Add(button.User.Id);
+					await button.UpdateAsync(message =>
+					{
+						message.Components = buildGameButtons(guildId, skipCounter);
+					});
+				}
 			}
 		}
 
