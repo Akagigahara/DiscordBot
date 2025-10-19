@@ -86,7 +86,7 @@ namespace DiscordBot
             if (message.Author.Id == _client.CurrentUser.Id)
 				return;
 			// Example: Respond to a specific command
-			if (message.Channel.Id == 1342593635216130080)
+			if (message.Channel.Id == 1342593635216130080 || message.Channel.Id == 1206764620866392095)
 			{
 				DeleteLater(message);
 			}
@@ -107,7 +107,9 @@ namespace DiscordBot
 
 		private static async void DeleteLater(SocketMessage message)
 		{
+			Log(new(LogSeverity.Info, "ephemeral Message", $"Deleting {message.Author}’s message in 7 minutes"));
 			await Task.Delay(TimeSpan.FromSeconds(420));
+			Log(new(LogSeverity.Info, "ephemeral Message", $"Deleting {message.Author}’s message now"));
             await message.DeleteAsync();
 		}
 	}
