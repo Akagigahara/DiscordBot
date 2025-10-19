@@ -19,17 +19,18 @@ namespace DiscordBot
 		public static async Task Main()
 		{
 			_client.Log += Log;
-			_client.InteractionCreated += async (interaction) => 
+			_client.InteractionCreated += async (interaction) =>
 			{
-                SocketInteractionContext ctx = new(_client, interaction);
-                await _interactionService.ExecuteCommandAsync(ctx, null);
-            };
-			_client.Ready += async () => 
+				SocketInteractionContext ctx = new(_client, interaction);
+				await _interactionService.ExecuteCommandAsync(ctx, null);
+			};
+			_client.Ready += async () =>
 			{
 				await _interactionService.RegisterCommandsGloballyAsync();
 			};
 			_client.ButtonExecuted += ButtonInteraction;
 			_client.ModalSubmitted += ModalHandler;
+			_client.MessageReceived += MessageHandler;
 
 			_interactionService.Log += Log;
 			await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), null);
@@ -38,7 +39,7 @@ namespace DiscordBot
 			await _client.LoginAsync(TokenType.Bot, token);
 			await _client.StartAsync();
 
-			 await Task.Delay(-1);
+			await Task.Delay(-1);
 		}
 
 		public static Task Log(LogMessage msg)
@@ -51,7 +52,7 @@ namespace DiscordBot
 		{
 			Log(new(LogSeverity.Info, "Modal handler", $"Modal interaction with ID {modal.Data.CustomId}"));
 			string[] parsedCustomId = modal.Data.CustomId.Split('-');
-			switch(parsedCustomId[0])
+			switch (parsedCustomId[0])
 			{
 				case "GridGameAnswerModal":
 					runningUniqueGames[(ulong)modal.GuildId].HandleAnswer(modal);
@@ -67,7 +68,7 @@ namespace DiscordBot
 				case "GridGameAnswerBtn":
 					//await component.RespondAsync("You clicked me!");
 					runningUniqueGames[(ulong)component.GuildId!].HandleButton(component);
-                    break;
+					break;
 				case "GridGameNewGameBtn":
 					GridGame.StartNewGame(component);
 					break;
@@ -75,7 +76,20 @@ namespace DiscordBot
 					(runningUniqueGames[(ulong)component.GuildId!] as GridGame)!.SkipCurrentGame(component);
 					break;
 
-            }
+			}
+		}
+
+		private static async Task MessageHandler(SocketMessage message)
+		{
+			Log(new(LogSeverity.Info, "Message handler", $"Message received in channel {message.Channel.Id} from user {message.Author.Username}"));
+            // Ignore messages from the bot itself
+            if (message.Author.Id == _client.CurrentUser.Id)
+				return;
+			// Example: Respond to a specific command
+			if (message.Channel.Id == 1342593635216130080)
+			{
+				DeleteLater(message);
+			}
 		}
 
 		private static Dictionary<string, string> ReadAppSettings()
@@ -89,6 +103,12 @@ namespace DiscordBot
 			}
 
 			return settings;
+		}
+
+		private static async void DeleteLater(SocketMessage message)
+		{
+			await Task.Delay(TimeSpan.FromSeconds(420));
+            await message.DeleteAsync();
 		}
 	}
 }
