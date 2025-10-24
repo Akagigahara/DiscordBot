@@ -6,8 +6,9 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using Discord.WebSocket;
+using DiscordBot.Bases;
 
-namespace DiscordBot
+namespace DiscordBot.Features.Games
 {
 
 	internal class Super_3T : IGame
@@ -28,14 +29,14 @@ namespace DiscordBot
                     for (int i = 1; i < 9; i++)
                     {
                         //vertical lines
-                        x.DrawLine(Color.Blue, 5, [new Point(width * (i) / 9, 0), new Point(width * (i) / 9, height)]);
+                        x.DrawLine(Color.Blue, 5, [new Point(width * i / 9, 0), new Point(width * i / 9, height)]);
                         //horizontal lines
-                        x.DrawLine(Color.Blue, 5, [new Point(0, height * (i) / 9), new Point(width, height * (i) / 9)]);
+                        x.DrawLine(Color.Blue, 5, [new Point(0, height * i / 9), new Point(width, height * i / 9)]);
                     }
                     for (byte i = 1; i < 4; i++)
 					{
-						x.DrawLine(Color.Red, 5, [new Point(width * (i) / 3, 0), new Point(width * (i) / 3, height)]);
-						x.DrawLine(Color.Red, 5, [new Point(0, height * (i) / 3), new Point(width, height * (i) / 3)]);
+						x.DrawLine(Color.Red, 5, [new Point(width * i / 3, 0), new Point(width * i / 3, height)]);
+						x.DrawLine(Color.Red, 5, [new Point(0, height * i / 3), new Point(width, height * i / 3)]);
 					}
 				});
 		}

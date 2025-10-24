@@ -1,24 +1,26 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.VisualBasic;
+using DiscordBot.Bases;
+using DiscordBot.Features.Games;
+using DiscordBot.Features.Utility;
 using System.Reflection;
-using static DiscordBot.GridGame;
 
 namespace DiscordBot
 {
 	public class Program
 	{
-		private static DiscordSocketClient _client = new();
-		private static InteractionService _interactionService = new(_client.Rest);
+		private static readonly DiscordSocketClient _client = new();
+		private static readonly InteractionService _interactionService = new(_client.Rest);
 		private static readonly Dictionary<string, string> appSettings = ReadAppSettings();
 		internal static Dictionary<ulong, IGame> runningUniqueGames = [];
 		internal static Dictionary<ulong, IGame[]> runningGenericGames = [];
+		internal static Dictionary<ulong, DisappearingMessages> disappearingMessages = [];
 
 		public static async Task Main()
 		{
-			_client.Log += Log;
+			LoadDisappearingChannels(out disappearingMessages);
+            _client.Log += Log;
 			_client.InteractionCreated += async (interaction) =>
 			{
 				SocketInteractionContext ctx = new(_client, interaction);
@@ -86,10 +88,11 @@ namespace DiscordBot
             if (message.Author.Id == _client.CurrentUser.Id)
 				return;
 			// Example: Respond to a specific command
-			if (message.Channel.Id == 1342593635216130080 || message.Channel.Id == 1206764620866392095)
+			if (disappearingMessages.TryGetValue(message.Channel.Id, out DisappearingMessages? channel))
 			{
-				DeleteLater(message);
+				channel.DeleteMessage(message);
 			}
+
 		}
 
 		private static Dictionary<string, string> ReadAppSettings()
@@ -105,12 +108,22 @@ namespace DiscordBot
 			return settings;
 		}
 
-		private static async void DeleteLater(SocketMessage message)
+		private static void LoadDisappearingChannels(out Dictionary<ulong, DisappearingMessages> channels)
 		{
-			Log(new(LogSeverity.Info, "ephemeral Message", $"Deleting {message.Author}’s message in 7 minutes"));
-			await Task.Delay(TimeSpan.FromSeconds(420));
-			Log(new(LogSeverity.Info, "ephemeral Message", $"Deleting {message.Author}’s message now"));
-            await message.DeleteAsync();
-		}
+			channels = [];
+            if (!File.Exists("./disappearing_channels.ini"))
+			{
+				return;
+			}
+			string[] unparsedChannels = File.ReadAllLines("./disappearing_channels.ini");
+			foreach (string channel in unparsedChannels)
+			{
+				if (string.IsNullOrWhiteSpace(channel)) continue;
+				string[] parsedChannel = channel.Split('=');
+				ulong channelId = ulong.Parse(parsedChannel[0].Trim());
+				int timeToDelete = int.Parse(parsedChannel[1].Trim());
+				channels[channelId] = new DisappearingMessages(ref disappearingMessages, channelId, timeToDelete);
+			}
+        }
 	}
 }

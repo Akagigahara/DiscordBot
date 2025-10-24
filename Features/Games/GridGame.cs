@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordBot.Bases;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Png;
@@ -8,7 +9,7 @@ using SixLabors.ImageSharp.Processing;
 using System.Text;
 using SL = SixLabors.ImageSharp;
 
-namespace DiscordBot
+namespace DiscordBot.Features.Games
 {
 	public class GridGame : IGame
 	{
@@ -63,7 +64,7 @@ namespace DiscordBot
 		/// <summary>
 		/// List containing the snowflakes of players on cooldown
 		/// </summary>
-		private readonly List<ulong> playersOnCD = [];
+		private readonly Dictionary<ulong, int> playersOnCD = [];
 		/// <summary>
 		/// A dictionary containing the meta data for the image currently in play
 		/// </summary>
@@ -156,11 +157,41 @@ namespace DiscordBot
 
 		}
 
-		/// <summary>
-		/// Initializes a new grid game.
-		/// </summary>
-		/// <exception cref="DirectoryNotFoundException">Exeption thrown when the directory containing the images, /pictures/, does not exist</exception>
-		public GridGame(ulong guildId)
+		public void updateScoreboard(ulong guildId)
+		{
+			Dictionary<ulong, int> scores = [];
+			if(!Directory.Exists($"./servers/{guildId}/"))
+			{
+				Directory.CreateDirectory($"./servers/{guildId}/");
+			}
+			if (!File.Exists($"./servers/{guildId}/gridgame.scores"))
+			{
+				File.Create($"./servers/{guildId}/gridgame.scores").Close();
+			}
+			string[] lines = File.ReadAllLines($"./servers/{guildId}/gridgame.scores");
+
+			foreach (string player in lines)
+			{
+				if (string.IsNullOrWhiteSpace(player)) continue;
+				string[] parsedPlayer = player.Split('=');
+				scores.Add(ulong.Parse(parsedPlayer[0].Trim()), int.Parse(parsedPlayer[1].Trim()));
+            }
+
+			foreach(Grid grid in correctGrids)
+			{
+				if (!scores.TryAdd(grid.guessedBy, 1)) scores[grid.guessedBy] += 1;
+            }
+
+			foreach(KeyValuePair<ulong, int> pair in scores)
+			{
+				File.WriteAllText($"./servers/{guildId}/gridgame.scores", $"{pair.Key}={pair.Value}\n");
+            }
+        }
+        /// <summary>
+        /// Initializes a new grid game.
+        /// </summary>
+        /// <exception cref="DirectoryNotFoundException">Exeption thrown when the directory containing the images, /pictures/, does not exist</exception>
+        public GridGame(ulong guildId)
 		{
 			Random rand = new();
 			if (!Directory.Exists("./pictures/"))
@@ -219,7 +250,8 @@ namespace DiscordBot
 		/// </summary>
 		[NsfwCommand(true)]
 		[CommandContextType(InteractionContextType.Guild)]
-		[Discord.Interactions.Group("gridgame", "All commands related to grid game")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [Group("gridgame", "All commands related to grid game")]
 		public class GridGameCommands : InteractionModuleBase<SocketInteractionContext>
 		{
 			/// <summary>
@@ -291,9 +323,9 @@ namespace DiscordBot
 					RespondAsync("No game is currently running", ephemeral: true);
 				}
 			}
-			[RequireUserPermission(GuildPermission.Administrator)]
+
 			[SlashCommand("setting", "Change one of the settings for grid game.")]
-			public async Task ChangeSettings(string? cooldown = null, IRole? role = null)
+			public async Task ChangeSettings([Summary(description:"Input the desired cooldown periode.")]string? cooldown = null, [Summary(description:"Set the role which will be pinged when a new game starts")]IRole? role = null)
 			{
 				RespondAsync("Settings received.", ephemeral: true);
 				if (Program.runningUniqueGames.ContainsKey(Context.Guild.Id))
@@ -421,7 +453,8 @@ namespace DiscordBot
 						components: new ComponentBuilder().WithButton("Start new game", $"GridGameNewGameBtn-{modal.GuildId}").Build()
 					);
 					Program.runningUniqueGames.Remove((ulong)modal.GuildId!);
-				}
+					updateScoreboard((ulong)modal.GuildId!);
+                }
 			}
 			MemoryStream fileStream = new();
 			baseGrid.Save(fileStream, new PngEncoder());
@@ -430,15 +463,15 @@ namespace DiscordBot
 			{
 				properties.Attachments = new Optional<IEnumerable<FileAttachment>>([new FileAttachment(fileStream, "grid.png")]);
 			});
-			playersOnCD.Add(modal.User.Id);
+			playersOnCD.Add(modal.User.Id, int.Parse(settings["cooldown"]));
 			RemovePlayerFromCD(modal.User.Id);
 		}
 
 		public void HandleButton(SocketMessageComponent button)
 		{
-			if (playersOnCD.Contains(button.User.Id))
+			if (playersOnCD.TryGetValue(button.User.Id, out int remainingCooldown))
 			{
-				button.RespondAsync("You are currently on cooldown", ephemeral: true);
+				button.RespondAsync($"You are currently on cooldown, please wait another {remainingCooldown} seconds", ephemeral: true);
 				return;
 			}
 
@@ -457,13 +490,17 @@ namespace DiscordBot
 			button.RespondWithModalAsync(modalBuilder.Build());
 		}
 		/// <summary>
-		/// Used to remove a player from the <see cref="GridGame.playersOnCD"/> list.
+		/// Used to remove a player from the <see cref="playersOnCD"/> list.
 		/// </summary>
 		/// <param name="playerId">The Discord snowflake of the user that is to be removed.</param>
 		private async void RemovePlayerFromCD(ulong playerId)
 		{
-			await Task.Delay(TimeSpan.FromSeconds(int.Parse(settings["cooldown"])));
-			this.playersOnCD.Remove(playerId);
+			for (int i = 0; i < int.Parse(settings["cooldown"]); i++)
+			{
+				await Task.Delay(TimeSpan.FromSeconds(1));
+				playersOnCD[playerId]--;
+            }
+			playersOnCD.Remove(playerId);
 		}
 
 
@@ -475,7 +512,11 @@ namespace DiscordBot
 		{
 			ulong guildId = (ulong)button.GuildId!;
 			GridGame newGame = new(guildId);
-			Program.runningUniqueGames.Add((ulong)button.GuildId!, newGame);
+			if (!Program.runningUniqueGames.TryAdd((ulong)button.GuildId!, newGame))
+			{
+				button.RespondAsync("There is already a game running.", ephemeral: true);
+				return;
+			}
 			MemoryStream fileStream = new();
 			await button.RespondWithFileAsync(
 				newGame.currentSet.First(file => file.Contains("3.")),
@@ -562,7 +603,7 @@ namespace DiscordBot
 				foreach (string setting in File.ReadAllLines($"./configs/{guildId}/gridGame.config"))
 				{
 					string[] parsedSettings = setting.Split('=');
-					this.settings.Add(parsedSettings[0].Trim(), parsedSettings[1].Trim());
+					settings.Add(parsedSettings[0].Trim(), parsedSettings[1].Trim());
 				}
 			}
 			Program.Log(new(LogSeverity.Info, $"{guildId}", "Game settings loaded"));
