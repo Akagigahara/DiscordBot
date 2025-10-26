@@ -79,6 +79,8 @@ namespace DiscordBot.Features.Games
 		private readonly SL.Image baseGrid = SL.Image.Load("./pictures/gridBase.png");
 		private int skipCounter = 0; 
 		private readonly List<ulong> playersThatVotedSkip = [];
+		private int lowPlayer = 0;
+		private ulong lastPlayer;
 
         /// <summary>
         /// Creates a <see langword="string"/> representation of the game grid.
@@ -157,7 +159,7 @@ namespace DiscordBot.Features.Games
 
 		}
 
-		public void updateScoreboard(ulong guildId)
+		public void UpdateScoreboard(ulong guildId)
 		{
 			Dictionary<ulong, int> scores = [];
 			if(!Directory.Exists($"./servers/{guildId}/"))
@@ -275,7 +277,7 @@ namespace DiscordBot.Features.Games
 
 					newGame.baseGrid.Save(fileStream, new PngEncoder());
 					newGame.gridUI = FollowupWithFileAsync(fileStream, "grid.png",
-						components: buildGameButtons(Context.Guild.Id)).Result.Id;
+						components: BuildGameButtons(Context.Guild.Id)).Result.Id;
 				}
 				else
 				{
@@ -315,7 +317,7 @@ namespace DiscordBot.Features.Games
 					newGame.baseGrid.Save(fileStream, new PngEncoder());
 					newGame.gridUI = FollowupWithFileAsync(
 						fileStream, "grid.png",
-						components: buildGameButtons(Context.Guild.Id)
+						components: BuildGameButtons(Context.Guild.Id)
 					).Result.Id;
 				}
 				else
@@ -453,8 +455,17 @@ namespace DiscordBot.Features.Games
 						components: new ComponentBuilder().WithButton("Start new game", $"GridGameNewGameBtn-{modal.GuildId}").Build()
 					);
 					Program.runningUniqueGames.Remove((ulong)modal.GuildId!);
-					updateScoreboard((ulong)modal.GuildId!);
+					UpdateScoreboard((ulong)modal.GuildId!);
                 }
+			}
+			if(lastPlayer is 0 || lastPlayer != modal.User.Id)
+			{
+				lastPlayer = modal.User.Id;
+				lowPlayer = 0;
+            }
+			else if(lastPlayer == modal.User.Id)
+			{
+				lowPlayer++;
 			}
 			MemoryStream fileStream = new();
 			baseGrid.Save(fileStream, new PngEncoder());
@@ -463,7 +474,21 @@ namespace DiscordBot.Features.Games
 			{
 				properties.Attachments = new Optional<IEnumerable<FileAttachment>>([new FileAttachment(fileStream, "grid.png")]);
 			});
-			playersOnCD.Add(modal.User.Id, int.Parse(settings["cooldown"]));
+            int cooldownTimer = int.Parse(settings["cooldown"]);
+            switch (lowPlayer)
+            {
+                case 1:
+                    cooldownTimer /= 2;
+                    break;
+                case 2:
+                    cooldownTimer /= 6;
+                    break;
+				case > 3:
+					cooldownTimer = 0;
+					break;
+            }
+
+            playersOnCD.Add(modal.User.Id, cooldownTimer);
 			RemovePlayerFromCD(modal.User.Id);
 		}
 
@@ -495,7 +520,8 @@ namespace DiscordBot.Features.Games
 		/// <param name="playerId">The Discord snowflake of the user that is to be removed.</param>
 		private async void RemovePlayerFromCD(ulong playerId)
 		{
-			for (int i = 0; i < int.Parse(settings["cooldown"]); i++)
+			int cooldown = playersOnCD[playerId];
+            for (int i = 0; i < cooldown; i++)
 			{
 				await Task.Delay(TimeSpan.FromSeconds(1));
 				playersOnCD[playerId]--;
@@ -524,7 +550,7 @@ namespace DiscordBot.Features.Games
 				allowedMentions: AllowedMentions.All);
 			newGame.baseGrid.Save(fileStream, new PngEncoder());
 			newGame.gridUI = button.FollowupWithFileAsync(fileStream, "grid.png",
-				components: buildGameButtons(guildId)).Result.Id;
+				components: BuildGameButtons(guildId)).Result.Id;
 		}
 
 		public async void SkipCurrentGame(SocketMessageComponent button)
@@ -550,7 +576,7 @@ namespace DiscordBot.Features.Games
 						allowedMentions: AllowedMentions.All);
 					newGame.baseGrid.Save(fileStream, new PngEncoder());
 					newGame.gridUI = button.FollowupWithFileAsync(fileStream, "grid.png",
-						components: buildGameButtons(guildId)).Result.Id;
+						components: BuildGameButtons(guildId)).Result.Id;
 				}
 				else
 				{
@@ -558,7 +584,7 @@ namespace DiscordBot.Features.Games
 					playersThatVotedSkip.Add(button.User.Id);
 					await button.UpdateAsync(message =>
 					{
-						message.Components = buildGameButtons(guildId, skipCounter);
+						message.Components = BuildGameButtons(guildId, skipCounter);
 					});
 				}
 			}
@@ -609,9 +635,9 @@ namespace DiscordBot.Features.Games
 			Program.Log(new(LogSeverity.Info, $"{guildId}", "Game settings loaded"));
 		}
 
-		private static MessageComponent buildGameButtons(ulong GuildId, int skipCounter = 0)
+		private static MessageComponent BuildGameButtons(ulong GuildId, int skipCounter = 0)
 		{
-			ComponentBuilder builder = new ComponentBuilder();
+			ComponentBuilder builder = new();
 			builder.WithButton("Submit answer", $"GridGameAnswerBtn-{GuildId}")
 				.WithButton($"Skip image {skipCounter}/3", $"GridGameSkipBtn-{GuildId}", ButtonStyle.Danger, new Emoji("\U000023E9"));
 
