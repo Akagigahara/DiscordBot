@@ -184,10 +184,12 @@ namespace DiscordBot.Features.Games
 				if (!scores.TryAdd(grid.guessedBy, 1)) scores[grid.guessedBy] += 1;
             }
 
-			foreach(KeyValuePair<ulong, int> pair in scores)
+			string scoreboard = "";
+            foreach (KeyValuePair<ulong, int> pair in scores)
 			{
-				File.AppendAllText($"./servers/{guildId}/gridgame.scores", $"{pair.Key}={pair.Value}\n");
+				scoreboard += $"{pair.Key}={pair.Value}\n";
             }
+			File.WriteAllText($"./servers/{guildId}/gridgame.scores", scoreboard);
         }
         /// <summary>
         /// Initializes a new grid game.
