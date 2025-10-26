@@ -487,9 +487,11 @@ namespace DiscordBot.Features.Games
 					cooldownTimer = 0;
 					break;
             }
-
-            playersOnCD.Add(modal.User.Id, cooldownTimer);
-			RemovePlayerFromCD(modal.User.Id);
+			if(cooldownTimer > 0)
+			{
+				playersOnCD.Add(modal.User.Id, cooldownTimer);
+				RemovePlayerFromCD(modal.User.Id);
+			}
 		}
 
 		public void HandleButton(SocketMessageComponent button)
