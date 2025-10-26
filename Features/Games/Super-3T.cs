@@ -197,6 +197,7 @@ namespace DiscordBot.Features.Games
 				Program.runningGenericGames.Add(Context.Guild.Id, []);
 			}
 			Super_3T newGame = new(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+			await Task.CompletedTask;
 		}
 	}
 }

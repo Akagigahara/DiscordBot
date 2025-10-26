@@ -186,7 +186,7 @@ namespace DiscordBot.Features.Games
 
 			foreach(KeyValuePair<ulong, int> pair in scores)
 			{
-				File.WriteAllText($"./servers/{guildId}/gridgame.scores", $"{pair.Key}={pair.Value}\n");
+				File.AppendAllText($"./servers/{guildId}/gridgame.scores", $"{pair.Key}={pair.Value}\n");
             }
         }
         /// <summary>
