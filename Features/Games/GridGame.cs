@@ -483,7 +483,7 @@ namespace DiscordBot.Features.Games
                 case 2:
                     cooldownTimer /= 6;
                     break;
-				case > 3:
+				case >= 3:
 					cooldownTimer = 0;
 					break;
             }
